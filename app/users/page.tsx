@@ -37,6 +37,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { LoadingSpinner } from "@/components/LoadingSpinner";
 
 export type ManagedUser = {
   id: string;
@@ -101,12 +102,14 @@ export default function UsersPage() {
   const [rows, setRows] = React.useState<ManagedUser[]>([]);
   const [total, setTotal] = React.useState(0);
   const [updatingId, setUpdatingId] = React.useState<string | null>(null);
+  const [loading, setLoading] = React.useState(true);
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
   React.useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
+        setLoading(true);
         const res = await fetch(`/api/users?page=${page}&pageSize=${pageSize}`);
         const data = await res.json();
         if (!cancelled && data.success) {
@@ -118,6 +121,8 @@ export default function UsersPage() {
           setRows([]);
           setTotal(0);
         }
+      } finally {
+        if (!cancelled) setLoading(false);
       }
     })();
     return () => { cancelled = true; };
@@ -187,6 +192,11 @@ export default function UsersPage() {
   return (
     <div className="min-h-screen py-10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {(loading || updatingId !== null) && (
+          <div className="fixed inset-0 z-50 bg-black/30 flex items-center justify-center">
+            <LoadingSpinner variant="spinner" size="lg" />
+          </div>
+        )}
         <div className="mb-6">
           <h1 className="text-2xl font-bold">Users</h1>
           <p className="text-slate-600">Admin can adjust user roles and manage users.</p>

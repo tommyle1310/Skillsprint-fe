@@ -25,6 +25,7 @@ export default function NewCoursePage() {
     e.preventDefault();
     setSaving(true);
     setError(null);
+    console.log('check here', JSON.stringify({ title, slug, description, price: Math.round(price * 100), avatar, createdById: user?.id }))
     try {
       const res = await fetch("/api/courses", {
         method: "POST",

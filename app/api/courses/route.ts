@@ -73,9 +73,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { title, description, price, slug, avatar } = await request.json();
+    const { title, description, price, slug, avatar, createdById } = await request.json();
 
-    if (!title || !description || !price || !slug) {
+    if (!title || !description || !price || !slug || !createdById) {
       return NextResponse.json(
         { message: 'All fields are required' },
         { status: 400 }
@@ -91,13 +91,14 @@ export async function POST(request: NextRequest) {
       },
       body: JSON.stringify({
         query: `
-          mutation CreateCourse($title: String!, $description: String!, $price: Int!, $slug: String!, $avatar: String) {
-            createCourse(title: $title, description: $description, price: $price, slug: $slug, avatar: $avatar) {
+          mutation CreateCourse($title: String!, $description: String!, $price: Int!, $slug: String!, $avatar: String, $createdById: String!) {
+            createCourse(title: $title, description: $description, price: $price, slug: $slug, avatar: $avatar, createdById: $createdById) {
               id
               title
               slug
               description
               price
+              createdById
               createdAt
             }
           }
@@ -108,6 +109,7 @@ export async function POST(request: NextRequest) {
           price: parseInt(price),
           slug,
           avatar,
+          createdById,
         },
       }),
     });

@@ -20,6 +20,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { LoadingSpinner } from "@/components/LoadingSpinner";
 
 type Promotion = {
   id: string;
@@ -43,14 +44,17 @@ export default function PromotionsPage() {
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
   const [saving, setSaving] = React.useState(false);
   const [form, setForm] = React.useState<Partial<Promotion>>({});
+  const [loading, setLoading] = React.useState(true);
 
   React.useEffect(() => {
     (async () => {
       try {
+        setLoading(true);
         const res = await fetch('/api/promotions');
         const data = await res.json();
         if (data.success) setRows(data.promotions as Promotion[]);
       } catch {}
+      finally { setLoading(false); }
     })();
   }, []);
 
@@ -66,6 +70,11 @@ export default function PromotionsPage() {
   return (
     <div className="min-h-screen py-10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {(loading || saving) && (
+          <div className="fixed inset-0 z-50 bg-black/30 flex items-center justify-center">
+            <LoadingSpinner variant="spinner" size="lg" />
+          </div>
+        )}
         <div className="mb-6">
           <h1 className="text-2xl font-bold">Promotions</h1>
           <p className="text-slate-600">Manage promotion codes and discounts.</p>
@@ -118,20 +127,26 @@ export default function PromotionsPage() {
                         ))}
                         <TableCell className="text-right">
                           <Button variant="outline" size="sm" onClick={async ()=>{
+                            setSaving(true);
                             const p = row.original as Promotion;
                             const code = prompt('Code', p.code) ?? p.code;
                             const discount = Number(prompt('Discount %', String(p.discountPercentage)) ?? p.discountPercentage);
                             const expiresAt = prompt('Expires ISO', p.expiresAt) ?? p.expiresAt;
-                            const res = await fetch('/api/promotions', { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ id: p.id, code, discountPercentage: discount, expiresAt }) });
-                            const data = await res.json();
-                            if (data.success){ setRows((r)=> r.map((it)=> it.id===p.id ? data.promotion : it)); }
+                            try {
+                              const res = await fetch('/api/promotions', { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ id: p.id, code, discountPercentage: discount, expiresAt }) });
+                              const data = await res.json();
+                              if (data.success){ setRows((r)=> r.map((it)=> it.id===p.id ? data.promotion : it)); }
+                            } finally { setSaving(false); }
                           }}>Edit</Button>
                           <Button className="ml-2" variant="destructive" size="sm" onClick={async ()=>{
                             const p = row.original as Promotion;
                             if (!confirm('Delete promotion '+p.code+'?')) return;
-                            const res = await fetch('/api/promotions?id='+p.id, { method:'DELETE' });
-                            const data = await res.json();
-                            if (data.success){ setRows((r)=> r.filter((it)=> it.id!==p.id)); }
+                            setSaving(true);
+                            try {
+                              const res = await fetch('/api/promotions?id='+p.id, { method:'DELETE' });
+                              const data = await res.json();
+                              if (data.success){ setRows((r)=> r.filter((it)=> it.id!==p.id)); }
+                            } finally { setSaving(false); }
                           }}>Delete</Button>
                         </TableCell>
                       </TableRow>

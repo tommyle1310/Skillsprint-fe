@@ -8,8 +8,10 @@ import { ShimmerButton } from "./magicui/shimmer-button";
 import { InteractiveHoverButton } from "./magicui/interactive-hover-button";
 import { useAuthStore } from "@/lib/authStore";
 import { signOut } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 export default function Navigation() {
+  const router = useRouter();
   const pathname = usePathname();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { isAuthenticated, isAdmin, user, logout } = useAuthStore();
@@ -23,7 +25,6 @@ export default function Navigation() {
 
   // Add admin link only for admin users
   if (isAdmin) {
-    navItems.push({ href: "/admin", label: "Admin", icon: BarChart3 });
     navItems.push({ href: "/promotions", label: "Promotion", icon: BarChart3 });
   }
 
@@ -36,6 +37,7 @@ export default function Navigation() {
     } catch {}
     // clear local auth store regardless of next-auth state
     logout();
+    router.push("/auth/login");
     setIsMenuOpen(false);
   };
 
@@ -55,7 +57,7 @@ export default function Navigation() {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
-            {navItems.map((item) => {
+            {navItems.filter(item => isAdmin ? item.href !== '/contact': item).map((item) => {
               const Icon = item.icon;
               return (
                 <Link
