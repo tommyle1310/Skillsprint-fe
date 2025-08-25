@@ -80,7 +80,7 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen py-20 bg-slate-50">
+    <div className="min-h-screen py-4 bg-slate-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-12">
@@ -109,96 +109,71 @@ export default function AdminDashboard() {
 
         {/* Key Metrics */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-          {/* Traffic */}
-          <div className="relative">
-            <BorderBeam />
-            <div className="bg-white rounded-2xl p-6 shadow-lg">
-              <div className="flex items-center justify-between mb-4">
-                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                  <Eye className="w-6 h-6 text-blue-600" />
+          {[
+            {
+              title: "Total Traffic",
+              value: stats.totalTraffic.toLocaleString(),
+              icon: Eye,
+              iconBg: "bg-blue-100",
+              iconColor: "text-blue-600",
+              growth: "+12.5%",
+              growthColor: "text-green-600"
+            },
+            {
+              title: "Total Leads",
+              value: stats.totalLeads.toLocaleString(),
+              icon: Mail,
+              iconBg: "bg-green-100",
+              iconColor: "text-green-600",
+              growth: "+8.2%",
+              growthColor: "text-green-600"
+            },
+            {
+              title: "Total Orders",
+              value: stats.totalOrders.toLocaleString(),
+              icon: ShoppingCart,
+              iconBg: "bg-purple-100",
+              iconColor: "text-purple-600",
+              growth: "+15.3%",
+              growthColor: "text-green-600"
+            },
+            {
+              title: "Total Revenue",
+              value: `$${stats.totalRevenue.toLocaleString()}`,
+              icon: DollarSign,
+              iconBg: "bg-yellow-100",
+              iconColor: "text-yellow-600",
+              growth: "+22.1%",
+              growthColor: "text-green-600"
+            }
+          ].map((stat, index) => (
+            <div key={index} className="relative rounded-2xl overflow-hidden">
+              <BorderBeam className="rounded-2xl"/>
+              <div className="bg-white rounded-2xl p-6 shadow-lg">
+                <div className="flex items-center justify-between mb-4">
+                  <div className={`w-12 h-12 ${stat.iconBg} rounded-lg flex items-center justify-center`}>
+                    <stat.icon className={`w-6 h-6 ${stat.iconColor}`} />
+                  </div>
+                  <span className="text-sm text-slate-500">Last {selectedPeriod}</span>
                 </div>
-                <span className="text-sm text-slate-500">Last {selectedPeriod}</span>
-              </div>
-              <div className="text-3xl font-bold text-slate-900 mb-2">
-                {stats.totalTraffic.toLocaleString()}
-              </div>
-              <div className="text-slate-600">Total Traffic</div>
-              <div className="flex items-center mt-2 text-green-600 text-sm">
-                <TrendingUp className="w-4 h-4 mr-1" />
-                +12.5%
+                <div className="text-3xl font-bold text-slate-900 mb-2">
+                  {stat.value}
+                </div>
+                <div className="text-slate-600">{stat.title}</div>
+                <div className={`flex items-center mt-2 ${stat.growthColor} text-sm`}>
+                  <TrendingUp className="w-4 h-4 mr-1" />
+                  {stat.growth}
+                </div>
               </div>
             </div>
-          </div>
-
-          {/* Leads */}
-          <div className="relative">
-            <BorderBeam />
-            <div className="bg-white rounded-2xl p-6 shadow-lg">
-              <div className="flex items-center justify-between mb-4">
-                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                  <Mail className="w-6 h-6 text-green-600" />
-                </div>
-                <span className="text-sm text-slate-500">Last {selectedPeriod}</span>
-              </div>
-              <div className="text-3xl font-bold text-slate-900 mb-2">
-                {stats.totalLeads.toLocaleString()}
-              </div>
-              <div className="text-slate-600">Total Leads</div>
-              <div className="flex items-center mt-2 text-green-600 text-sm">
-                <TrendingUp className="w-4 h-4 mr-1" />
-                +8.2%
-              </div>
-            </div>
-          </div>
-
-          {/* Orders */}
-          <div className="relative">
-            <BorderBeam />
-            <div className="bg-white rounded-2xl p-6 shadow-lg">
-              <div className="flex items-center justify-between mb-4">
-                <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                  <ShoppingCart className="w-6 h-6 text-purple-600" />
-                </div>
-                <span className="text-sm text-slate-500">Last {selectedPeriod}</span>
-              </div>
-              <div className="text-3xl font-bold text-slate-900 mb-2">
-                {stats.totalOrders.toLocaleString()}
-              </div>
-              <div className="text-slate-600">Total Orders</div>
-              <div className="flex items-center mt-2 text-green-600 text-sm">
-                <TrendingUp className="w-4 h-4 mr-1" />
-                +15.3%
-              </div>
-            </div>
-          </div>
-
-          {/* Revenue */}
-          <div className="relative">
-            <BorderBeam />
-            <div className="bg-white rounded-2xl p-6 shadow-lg">
-              <div className="flex items-center justify-between mb-4">
-                <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
-                  <DollarSign className="w-6 h-6 text-yellow-600" />
-                </div>
-                <span className="text-sm text-slate-500">Last {selectedPeriod}</span>
-              </div>
-              <div className="text-3xl font-bold text-slate-900 mb-2">
-                ${stats.totalRevenue.toLocaleString()}
-              </div>
-              <div className="text-slate-600">Total Revenue</div>
-              <div className="flex items-center mt-2 text-green-600 text-sm">
-                <TrendingUp className="w-4 h-4 mr-1" />
-                +22.1%
-              </div>
-            </div>
-          </div>
+          ))}
         </div>
 
         {/* Conversion Metrics */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+        <div className="grid grid-cols-1  lg:grid-cols-2 gap-6 mb-12">
           {/* Lead Conversion Rate */}
-          <div className="relative">
-            <BorderBeam />
+          <div className="relative rounded-2xl overflow-hidden">
+            <BorderBeam className="rounded-2xl"/>
             <div className="bg-white rounded-2xl p-8 shadow-lg">
               <h3 className="text-xl font-bold text-slate-900 mb-6">Lead Conversion Rate</h3>
               <div className="flex items-center justify-center mb-6">
@@ -219,8 +194,8 @@ export default function AdminDashboard() {
           </div>
 
           {/* Revenue Per Visitor */}
-          <div className="relative">
-            <BorderBeam />
+          <div className="relative rounded-2xl overflow-hidden">
+            <BorderBeam className="rounded-2xl"/>
             <div className="bg-white rounded-2xl p-8 shadow-lg">
               <h3 className="text-xl font-bold text-slate-900 mb-6">Revenue Per Visitor</h3>
               <div className="flex items-center justify-center mb-6">
@@ -242,10 +217,10 @@ export default function AdminDashboard() {
         </div>
 
         {/* Recent Activity */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Recent Leads */}
-          <div className="relative">
-            <BorderBeam />
+          <div className="relative rounded-2xl overflow-hidden">
+            <BorderBeam className="rounded-2xl"/>
             <div className="bg-white rounded-2xl p-6 shadow-lg">
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-xl font-bold text-slate-900">Recent Leads</h3>
@@ -271,8 +246,8 @@ export default function AdminDashboard() {
           </div>
 
           {/* Recent Orders */}
-          <div className="relative">
-            <BorderBeam />
+          <div className="relative rounded-2xl overflow-hidden">
+            <BorderBeam className="rounded-2xl"/>
             <div className="bg-white rounded-2xl p-6 shadow-lg">
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-xl font-bold text-slate-900">Recent Orders</h3>
@@ -312,11 +287,13 @@ export default function AdminDashboard() {
                         <Activity className="w-5 h-5 mr-2" />
                         Generate Report
                       </ShimmerButton>
-                      <InteractiveHoverButton className="h-12">
+                      <InteractiveHoverButton className="h-12 flex ">
+                       <div className="flex items-center justify-center">
                         <Users className="w-5 h-5 mr-2" />
                         Manage Users
+                       </div>
                       </InteractiveHoverButton>
-                      <ShimmerButton className="h-12">
+                      <ShimmerButton className="h-12" background="#29cc34">
                         <BarChart3 className="w-5 h-5 mr-2" />
                         Export Data
                       </ShimmerButton>

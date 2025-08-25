@@ -98,8 +98,8 @@ export default function ContactPage() {
         <div className="grid lg:grid-cols-2 gap-16 items-start">
           {/* Contact Form */}
           <div className="space-y-8">
-            <div className="relative">
-              <BorderBeam />
+            <div className="relative rounded-2xl overflow-hidden">
+              <BorderBeam className="rounded-2xl"/>
               <div className="bg-white rounded-2xl p-8 shadow-lg">
                 <h2 className="text-2xl font-bold text-slate-900 mb-6">Send us a Message</h2>
                 
@@ -194,8 +194,8 @@ export default function ContactPage() {
           {/* Contact Info & Safari Browser */}
           <div className="space-y-8">
             {/* Contact Information */}
-            <div className="relative">
-              <BorderBeam />
+            <div className="relative rounded-2xl overflow-hidden">
+              <BorderBeam className="rounded-2xl"/>
               <div className="bg-white rounded-2xl p-8 shadow-lg">
                 <h2 className="text-2xl font-bold text-slate-900 mb-6">Contact Information</h2>
                 
@@ -219,16 +219,15 @@ export default function ContactPage() {
             </div>
 
             {/* Safari Browser Demo */}
-            <div className="relative">
-              <BorderBeam />
+            <div className="relative rounded-2xl overflow-hidden">
+              <BorderBeam className="rounded-2xl"/>
               <div className="bg-white rounded-2xl p-8 shadow-lg">
                 <h3 className="text-xl font-bold text-slate-900 mb-6 text-center">Experience Our Platform</h3>
                 <div className="flex justify-center">
                   <Safari
                     url="skillsprint.com"
-                    imageSrc="https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=1200&h=700&fit=crop"
-                    width={400}
-                    height={250}
+                    videoSrc="https://res.cloudinary.com/dlavqnrlx/video/upload/v1723980102/fast_motion_city_roxlrh.mp4"
+                    className="w-full h-auto drop-shadow-2xl"
                     mode="simple"
                   />
                 </div>
@@ -248,8 +247,8 @@ export default function ContactPage() {
           </div>
           
           <div className="grid md:grid-cols-2 gap-8">
-            <div className="relative">
-              <BorderBeam />
+            <div className="relative rounded-2xl overflow-hidden">
+              <BorderBeam className="rounded-2xl"/>
               <div className="bg-white rounded-2xl p-6 shadow-lg">
                 <h3 className="text-lg font-bold text-slate-900 mb-3">How does sequential learning work?</h3>
                 <p className="text-slate-600">
@@ -259,8 +258,8 @@ export default function ContactPage() {
               </div>
             </div>
             
-            <div className="relative">
-              <BorderBeam />
+            <div className="relative rounded-2xl overflow-hidden">
+              <BorderBeam className="rounded-2xl"/>
               <div className="bg-white rounded-2xl p-6 shadow-lg">
                 <h3 className="text-lg font-bold text-slate-900 mb-3">Can I access courses on mobile?</h3>
                 <p className="text-slate-600">
@@ -270,8 +269,8 @@ export default function ContactPage() {
               </div>
             </div>
             
-            <div className="relative">
-              <BorderBeam />
+            <div className="relative rounded-2xl overflow-hidden ">
+              <BorderBeam className="rounded-2xl"/>
               <div className="bg-white rounded-2xl p-6 shadow-lg">
                 <h3 className="text-lg font-bold text-slate-900 mb-3">What if I need help with a course?</h3>
                 <p className="text-slate-600">
@@ -281,8 +280,8 @@ export default function ContactPage() {
               </div>
             </div>
             
-            <div className="relative">
-              <BorderBeam />
+            <div className="relative rounded-2xl overflow-hidden">
+              <BorderBeam className="rounded-2xl"/>
               <div className="bg-white rounded-2xl p-6 shadow-lg">
                 <h3 className="text-lg font-bold text-slate-900 mb-3">Do you offer certificates?</h3>
                 <p className="text-slate-600">

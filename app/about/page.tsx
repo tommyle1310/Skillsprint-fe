@@ -1,6 +1,6 @@
 "use client";
 
-import { BookOpen, Users, Award, Globe, Target, Heart } from "lucide-react";
+import { BookOpen, Users, Award, Globe, Target, Heart, Combine, ChartNoAxesCombined, PlaneTakeoff, PlaneLanding, Captions, Presentation } from "lucide-react";
 import { BorderBeam } from "@/components/magicui/border-beam";
 import { ArcTimeline } from "@/components/magicui/arc-timeline";
 import { TextAnimate } from "@/components/magicui/text-animate";
@@ -9,54 +9,62 @@ import { ShimmerButton } from "@/components/magicui/shimmer-button";
 export default function AboutPage() {
   const timelineData = [
     {
-      time: "2020",
+      time: "25/08/2025",
       steps: [
         {
           icon: <BookOpen className="w-6 h-6" />,
-          content: "Founded with a vision to revolutionize online learning"
+          content: "Gather requirements & create timeline"
         },
         {
-          icon: <Users className="w-6 h-6" />,
-          content: "First 100 students joined our platform"
-        }
+          icon: <Presentation className="w-6 h-6" />,
+          content: "Create a landing page & Core APIs"
+        },
+        {
+          icon: <Combine className="w-6 h-6" />,
+          content: "Integrate FE & BE, OAuth, Stripe (Sandbox), etc."
+        },
+        {
+          icon: <ChartNoAxesCombined className="w-6 h-6" />,
+          content: "Integrate Analytics, SEO, etc."
+        },
       ]
     },
     {
-      time: "2021",
+      time: "26/08/2025",
       steps: [
         {
           icon: <Award className="w-6 h-6" />,
-          content: "Won Best EdTech Startup Award"
+          content: "Enhance UI/UX, integrate should-have features"
         },
         {
           icon: <Globe className="w-6 h-6" />,
-          content: "Expanded to 50+ countries worldwide"
+          content: "Attempt to launch (Vercel)"
         }
       ]
     },
     {
-      time: "2022",
+      time: "27/08/2025",
       steps: [
         {
-          icon: <Target className="w-6 h-6" />,
-          content: "Launched AI-powered learning paths"
+          icon: <PlaneTakeoff className="w-6 h-6" />,
+          content: "First day field trip (compulsory) to Malaysia"
         },
         {
           icon: <Heart className="w-6 h-6" />,
-          content: "Reached 10,000+ active learners"
-        }
+          content: "Improve UI/UX, add more features"
+        },
+        {
+          icon: <Captions className="w-6 h-6" />,
+          content: "Submit project's reports daily"
+        },
       ]
     },
     {
-      time: "2023",
+      time: "30/08/2025",
       steps: [
         {
-          icon: <BookOpen className="w-6 h-6" />,
-          content: "Introduced sequential learning methodology"
-        },
-        {
-          icon: <Users className="w-6 h-6" />,
-          content: "Partnered with top universities"
+          icon: <PlaneLanding className="w-6 h-6" />,
+          content: "Landed Vietnam, fix visible bugs"
         }
       ]
     }
@@ -209,7 +217,7 @@ export default function AboutPage() {
             <p className="text-lg text-slate-600 mb-8">
               Be part of the educational revolution. Start your learning journey today.
             </p>
-            <ShimmerButton className="text-lg px-8 py-4">
+            <ShimmerButton className="text-lg px-8 py-4 mx-auto">
               Get Started Now
             </ShimmerButton>
           </div>
