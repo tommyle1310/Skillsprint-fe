@@ -7,6 +7,9 @@ import { AnimatedCircularProgressBar } from "@/components/magicui/animated-circu
 import { ShimmerButton } from "@/components/magicui/shimmer-button";
 import { InteractiveHoverButton } from "@/components/magicui/interactive-hover-button";
 import { Dock } from "@/components/magicui/dock";
+import { useAuthStore } from "@/lib/authStore";
+import { ForbiddenPage } from "@/app/ForbiddenPage";
+import { LoadingSpinner } from "@/components/LoadingSpinner";
 
 interface DashboardStats {
   totalTraffic: number;
@@ -23,6 +26,21 @@ export default function AdminDashboard() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedPeriod, setSelectedPeriod] = useState("7d");
+  
+  const { isAuthenticated, isAdmin, loading, initialized } = useAuthStore();
+
+  // Check if user is admin
+  if (!initialized || loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <LoadingSpinner size="lg" />
+      </div>
+    );
+  }
+
+  if (!isAuthenticated || !isAdmin) {
+    return <ForbiddenPage />;
+  }
 
   // Mock data - replace with actual API call
   useEffect(() => {
@@ -74,7 +92,7 @@ export default function AdminDashboard() {
   if (isLoading || !stats) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+        <LoadingSpinner size="lg" />
       </div>
     );
   }
@@ -178,11 +196,13 @@ export default function AdminDashboard() {
               <h3 className="text-xl font-bold text-slate-900 mb-6">Lead Conversion Rate</h3>
               <div className="flex items-center justify-center mb-6">
                 <AnimatedCircularProgressBar
-                  size={120}
-                  strokeWidth={8}
-                  color="#3b82f6"
-                  label={`${stats.leadConversionRate}%`}
+                  value={stats.leadConversionRate}
+                  gaugePrimaryColor="#3b82f6"
+                  gaugeSecondaryColor="#e5e7eb"
                 />
+                <div className="absolute text-center">
+                  <div className="text-3xl font-bold text-slate-900">{stats.leadConversionRate}%</div>
+                </div>
               </div>
               <div className="text-center">
                 <p className="text-slate-600 mb-2">Leads converted to customers</p>
@@ -200,11 +220,13 @@ export default function AdminDashboard() {
               <h3 className="text-xl font-bold text-slate-900 mb-6">Revenue Per Visitor</h3>
               <div className="flex items-center justify-center mb-6">
                 <AnimatedCircularProgressBar
-                  size={120}
-                  strokeWidth={8}
-                  color="#10b981"
-                  label={`$${stats.revenuePerVisitor}`}
+                  value={Math.round(stats.revenuePerVisitor * 100)}
+                  gaugePrimaryColor="#10b981"
+                  gaugeSecondaryColor="#e5e7eb"
                 />
+                <div className="absolute text-center">
+                  <div className="text-3xl font-bold text-slate-900">${stats.revenuePerVisitor}</div>
+                </div>
               </div>
               <div className="text-center">
                 <p className="text-slate-600 mb-2">Average revenue per visitor</p>
@@ -224,7 +246,7 @@ export default function AdminDashboard() {
             <div className="bg-white rounded-2xl p-6 shadow-lg">
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-xl font-bold text-slate-900">Recent Leads</h3>
-                <ShimmerButton size="sm">View All</ShimmerButton>
+                <ShimmerButton>View All</ShimmerButton>
               </div>
               <div className="space-y-4">
                 {stats.recentLeads.map((lead) => (
@@ -238,7 +260,7 @@ export default function AdminDashboard() {
                         <div className="text-sm text-slate-500">{formatDate(lead.createdAt)}</div>
                       </div>
                     </div>
-                    <InteractiveHoverButton size="sm">Contact</InteractiveHoverButton>
+                    <InteractiveHoverButton>Contact</InteractiveHoverButton>
                   </div>
                 ))}
               </div>
@@ -251,7 +273,7 @@ export default function AdminDashboard() {
             <div className="bg-white rounded-2xl p-6 shadow-lg">
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-xl font-bold text-slate-900">Recent Orders</h3>
-                <ShimmerButton size="sm">View All</ShimmerButton>
+                <ShimmerButton>View All</ShimmerButton>
               </div>
               <div className="space-y-4">
                 {stats.recentOrders.map((order) => (
@@ -269,7 +291,7 @@ export default function AdminDashboard() {
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
                         {order.status}
                       </span>
-                      <InteractiveHoverButton size="sm">View</InteractiveHoverButton>
+                      <InteractiveHoverButton>View</InteractiveHoverButton>
                     </div>
                   </div>
                 ))}
@@ -278,49 +300,49 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-                        {/* Quick Actions */}
-                <div className="mt-12">
-                  <div className="bg-white rounded-2xl p-8 shadow-lg">
-                    <h3 className="text-xl font-bold text-slate-900 mb-6">Quick Actions</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <ShimmerButton className="h-12">
-                        <Activity className="w-5 h-5 mr-2" />
-                        Generate Report
-                      </ShimmerButton>
-                      <InteractiveHoverButton className="h-12 flex ">
-                       <div className="flex items-center justify-center">
-                        <Users className="w-5 h-5 mr-2" />
-                        Manage Users
-                       </div>
-                      </InteractiveHoverButton>
-                      <ShimmerButton className="h-12" background="#29cc34">
-                        <BarChart3 className="w-5 h-5 mr-2" />
-                        Export Data
-                      </ShimmerButton>
-                    </div>
-                  </div>
-                </div>
+        {/* Quick Actions */}
+        <div className="mt-12">
+          <div className="bg-white rounded-2xl p-8 shadow-lg">
+            <h3 className="text-xl font-bold text-slate-900 mb-6">Quick Actions</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <ShimmerButton className="h-12">
+                <Activity className="w-5 h-5 mr-2" />
+                Generate Report
+              </ShimmerButton>
+              <InteractiveHoverButton className="h-12 flex ">
+               <div className="flex items-center justify-center">
+                <Users className="w-5 h-5 mr-2" />
+                Manage Users
+               </div>
+              </InteractiveHoverButton>
+              <ShimmerButton className="h-12" background="#29cc34">
+                <BarChart3 className="w-5 h-5 mr-2" />
+                Export Data
+              </ShimmerButton>
+            </div>
+          </div>
+        </div>
 
-                {/* Dock Navigation */}
-                <div className="mt-12">
-                  <div className="bg-white rounded-2xl p-8 shadow-lg">
-                    <h3 className="text-xl font-bold text-slate-900 mb-6">Quick Navigation</h3>
-                    <Dock className="mx-auto">
-                      <div className="bg-blue-500 text-white rounded-full p-3">
-                        <Home className="w-6 h-6" />
-                      </div>
-                      <div className="bg-green-500 text-white rounded-full p-3">
-                        <BookOpen className="w-6 h-6" />
-                      </div>
-                      <div className="bg-purple-500 text-white rounded-full p-3">
-                        <Users className="w-6 h-6" />
-                      </div>
-                      <div className="bg-yellow-500 text-white rounded-full p-3">
-                        <BarChart3 className="w-6 h-6" />
-                      </div>
-                    </Dock>
-                  </div>
-                </div>
+        {/* Dock Navigation */}
+        <div className="mt-12">
+          <div className="bg-white rounded-2xl p-8 shadow-lg">
+            <h3 className="text-xl font-bold text-slate-900 mb-6">Quick Navigation</h3>
+            <Dock className="mx-auto">
+              <div className="bg-blue-500 text-white rounded-full p-3">
+                <Home className="w-6 h-6" />
+              </div>
+              <div className="bg-green-500 text-white rounded-full p-3">
+                <BookOpen className="w-6 h-6" />
+              </div>
+              <div className="bg-purple-500 text-white rounded-full p-3">
+                <Users className="w-6 h-6" />
+              </div>
+              <div className="bg-yellow-500 text-white rounded-full p-3">
+                <BarChart3 className="w-6 h-6" />
+              </div>
+            </Dock>
+          </div>
+        </div>
       </div>
     </div>
   );

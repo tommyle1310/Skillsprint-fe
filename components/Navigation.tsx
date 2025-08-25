@@ -2,24 +2,35 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BookOpen, Home, User, BarChart3, Menu, X, Users, MessageSquare } from "lucide-react";
+import { BookOpen, Home, User, BarChart3, Menu, X, Users, MessageSquare, LogOut } from "lucide-react";
 import { useState } from "react";
 import { ShimmerButton } from "./magicui/shimmer-button";
 import { InteractiveHoverButton } from "./magicui/interactive-hover-button";
+import { useAuthStore } from "@/lib/authStore";
 
 export default function Navigation() {
   const pathname = usePathname();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { isAuthenticated, isAdmin, user, logout } = useAuthStore();
 
-            const navItems = [
-            { href: "/", label: "Home", icon: Home },
-            { href: "/courses", label: "Courses", icon: BookOpen },
-            { href: "/about", label: "About", icon: Users },
-            { href: "/contact", label: "Contact", icon: MessageSquare },
-            { href: "/admin", label: "Admin", icon: BarChart3 },
-          ];
+  const navItems = [
+    { href: "/", label: "Home", icon: Home },
+    { href: "/courses", label: "Courses", icon: BookOpen },
+    { href: "/about", label: "About", icon: Users },
+    { href: "/contact", label: "Contact", icon: MessageSquare },
+  ];
+
+  // Add admin link only for admin users
+  if (isAdmin) {
+    navItems.push({ href: "/admin", label: "Admin", icon: BarChart3 });
+  }
 
   const isActive = (href: string) => pathname === href;
+
+  const handleLogout = () => {
+    logout();
+    setIsMenuOpen(false);
+  };
 
   return (
     <nav className="bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-50">
@@ -58,12 +69,29 @@ export default function Navigation() {
 
           {/* Auth Buttons */}
           <div className="hidden md:flex items-center space-x-4">
-            <Link href="/auth/login">
-              <InteractiveHoverButton>Login</InteractiveHoverButton>
-            </Link>
-            <Link href="/auth/register">
-              <ShimmerButton>Get Started</ShimmerButton>
-            </Link>
+            {isAuthenticated ? (
+              <div className="flex items-center space-x-4">
+                <div className="flex items-center space-x-2">
+                  <User className="w-4 h-4 text-slate-600" />
+                  <span className="text-sm text-slate-600">
+                    {user?.name || user?.email}
+                  </span>
+                </div>
+                <InteractiveHoverButton onClick={handleLogout}>
+                  <LogOut className="w-4 h-4 mr-2" />
+                  Logout
+                </InteractiveHoverButton>
+              </div>
+            ) : (
+              <>
+                <Link href="/auth/login">
+                  <InteractiveHoverButton>Login</InteractiveHoverButton>
+                </Link>
+                <Link href="/auth/register">
+                  <ShimmerButton>Get Started</ShimmerButton>
+                </Link>
+              </>
+            )}
           </div>
 
           {/* Mobile menu button */}
@@ -100,12 +128,29 @@ export default function Navigation() {
                 );
               })}
               <div className="pt-4 border-t border-slate-200">
-                <Link href="/auth/login" className="block w-full text-center px-3 py-2 text-sm font-medium text-slate-600 hover:text-blue-600">
-                  Login
-                </Link>
-                <Link href="/auth/register" className="block w-full text-center px-3 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700">
-                  Get Started
-                </Link>
+                {isAuthenticated ? (
+                  <div className="space-y-2">
+                    <div className="px-3 py-2 text-sm text-slate-600">
+                      Welcome, {user?.name || user?.email}
+                    </div>
+                    <button
+                      onClick={handleLogout}
+                      className="block w-full text-center px-3 py-2 text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded-md"
+                    >
+                      <LogOut className="w-4 h-4 inline mr-2" />
+                      Logout
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <Link href="/auth/login" className="block w-full text-center px-3 py-2 text-sm font-medium text-slate-600 hover:text-blue-600">
+                      Login
+                    </Link>
+                    <Link href="/auth/register" className="block w-full text-center px-3 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700">
+                      Get Started
+                    </Link>
+                  </>
+                )}
               </div>
             </div>
           </div>

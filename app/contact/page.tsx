@@ -6,6 +6,7 @@ import { BorderBeam } from "@/components/magicui/border-beam";
 import { Safari } from "@/components/magicui/safari";
 import { ShimmerButton } from "@/components/magicui/shimmer-button";
 import { TextAnimate } from "@/components/magicui/text-animate";
+import { LoadingSpinner } from "@/components/LoadingSpinner";
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({
@@ -16,6 +17,7 @@ export default function ContactPage() {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [error, setError] = useState("");
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({
@@ -27,13 +29,26 @@ export default function ContactPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
+    setError("");
     
     try {
-      // Simulate form submission
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      setIsSubmitted(true);
+      const response = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        setIsSubmitted(true);
+        setFormData({ name: "", email: "", subject: "", message: "" });
+      } else {
+        setError(data.message || "Failed to send message");
+      }
     } catch (error) {
       console.error("Error submitting form:", error);
+      setError("An error occurred. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -73,7 +88,7 @@ export default function ContactPage() {
           <p className="text-lg text-slate-600 mb-6">
             Thank you for reaching out. We&apos;ll get back to you within 24 hours.
           </p>
-          <ShimmerButton onClick={() => setIsSubmitted(false)}>
+          <ShimmerButton className="mx-auto" onClick={() => setIsSubmitted(false)}>
             Send Another Message
           </ShimmerButton>
         </div>
@@ -102,6 +117,12 @@ export default function ContactPage() {
               <BorderBeam className="rounded-2xl"/>
               <div className="bg-white rounded-2xl p-8 shadow-lg">
                 <h2 className="text-2xl font-bold text-slate-900 mb-6">Send us a Message</h2>
+                
+                {error && (
+                  <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+                    <p className="text-sm text-red-600">{error}</p>
+                  </div>
+                )}
                 
                 <form onSubmit={handleSubmit} className="space-y-6">
                   <div className="grid md:grid-cols-2 gap-4">
@@ -176,7 +197,7 @@ export default function ContactPage() {
                   >
                     {isSubmitting ? (
                       <div className="flex items-center">
-                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                        <LoadingSpinner size="sm" className="mr-2" />
                         Sending Message...
                       </div>
                     ) : (

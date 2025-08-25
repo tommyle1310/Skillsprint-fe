@@ -2,11 +2,14 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Eye, EyeOff, Mail, Lock, User, BookOpen, CheckCircle } from "lucide-react";
 import { AuroraText } from "@/components/magicui/aurora-text";
 import { BorderBeam } from "@/components/magicui/border-beam";
 import { ShimmerButton } from "@/components/magicui/shimmer-button";
 import { InteractiveHoverButton } from "@/components/magicui/interactive-hover-button";
+import { useAuthStore } from "@/lib/authStore";
+import { LoadingSpinner } from "@/components/LoadingSpinner";
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
@@ -20,6 +23,9 @@ export default function RegisterPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [isSuccess, setIsSuccess] = useState(false);
+  
+  const router = useRouter();
+  const { login } = useAuthStore();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -50,14 +56,18 @@ export default function RegisterPage() {
         }),
       });
 
-      if (response.ok) {
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        // Store auth data in Zustand store
+        login(data.user, data.token);
         setIsSuccess(true);
+        
         // Redirect after 2 seconds
         setTimeout(() => {
-          window.location.href = "/auth/login";
+          router.push("/courses");
         }, 2000);
       } else {
-        const data = await response.json();
         setError(data.message || "Registration failed");
       }
     } catch (err) {
@@ -78,7 +88,7 @@ export default function RegisterPage() {
             Welcome to SkillSprint!
           </AuroraText>
           <p className="text-lg text-slate-600 mb-6">
-            Your account has been created successfully. You&apos;ll be redirected to login shortly.
+            Your account has been created successfully. You&apos;ll be redirected to courses shortly.
           </p>
           <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg">
             <div className="animate-pulse">
@@ -247,7 +257,14 @@ export default function RegisterPage() {
                 disabled={isLoading}
                 className="w-full h-12 text-base"
               >
-                {isLoading ? "Creating Account..." : "Create Account"}
+                {isLoading ? (
+                  <div className="flex items-center">
+                    <LoadingSpinner size="sm" className="mr-2" />
+                    Creating Account...
+                  </div>
+                ) : (
+                  "Create Account"
+                )}
               </ShimmerButton>
             </form>
           </div>

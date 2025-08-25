@@ -1,17 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-export async function POST(request: NextRequest) {
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { slug: string } }
+) {
   try {
-    const { email, password } = await request.json();
+    const { slug } = params;
 
-    if (!email || !password) {
+    if (!slug) {
       return NextResponse.json(
-        { message: 'Email and password are required' },
+        { message: 'Course slug is required' },
         { status: 400 }
       );
     }
 
-    // Call backend GraphQL API
+    // Call backend GraphQL API to get course by slug
     const response = await fetch(`${process.env.API_URL || 'http://localhost:4000'}/graphql`, {
       method: 'POST',
       headers: {
@@ -19,22 +22,27 @@ export async function POST(request: NextRequest) {
       },
       body: JSON.stringify({
         query: `
-          mutation Login($email: String!, $password: String!) {
-            login(email: $email, password: $password) {
-              access_token
-              user {
+          query Course($slug: String!) {
+            course(slug: $slug) {
+              id
+              title
+              slug
+              avatar
+              description
+              price
+              createdAt
+              lessons {
                 id
-                email
-                name
+                title
+                order
                 avatar
-                createdAt
+                videoUrl
               }
             }
           }
         `,
         variables: {
-          email,
-          password,
+          slug,
         },
       }),
     });
@@ -43,27 +51,24 @@ export async function POST(request: NextRequest) {
 
     if (data.errors) {
       return NextResponse.json(
-        { message: data.errors[0].message || 'Login failed' },
+        { message: data.errors[0].message || 'Failed to fetch course' },
         { status: 400 }
       );
     }
 
-    if (data.data?.login) {
-      const { access_token, user } = data.data.login;
-      
+    if (data.data?.course) {
       return NextResponse.json({
         success: true,
-        token: access_token,
-        user,
+        course: data.data.course,
       });
     }
 
     return NextResponse.json(
-      { message: 'Invalid credentials' },
-      { status: 401 }
+      { message: 'Course not found' },
+      { status: 404 }
     );
   } catch (error) {
-    console.error('Login error:', error);
+    console.error('Course fetch error:', error);
     return NextResponse.json(
       { message: 'Internal server error' },
       { status: 500 }

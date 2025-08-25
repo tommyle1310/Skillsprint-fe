@@ -40,11 +40,15 @@ import { Safari } from "@/components/magicui/safari";
 import Iphone15Pro from "@/components/magicui/iphone-15-pro";
 import { ScrollProgress } from "@/components/magicui/scroll-progress";
 import { AnimatedSubscribeButton } from "@/components/magicui/animated-subscribe-button";
+import { useAuthStore } from "@/lib/authStore";
+import { LoadingSpinner } from "@/components/LoadingSpinner";
 
 export default function HomePage() {
   const [email, setEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  
+  const { isAuthenticated, isAdmin, user } = useAuthStore();
 
   const [stats, setStats] = useState({
     students: 0,
@@ -239,6 +243,7 @@ export default function HomePage() {
             <div className="relative order-2 lg:order-1">
               <div className="relative mx-auto w-2xl ">
                 <Safari
+                url="https://www.skillsprint.com"
                   videoSrc="https://res.cloudinary.com/dlavqnrlx/video/upload/v1724035988/work_iu9npi.mp4"
                   className="w-full h-auto drop-shadow-2xl"
                 />
@@ -261,63 +266,118 @@ export default function HomePage() {
                   </Badge>
 
                   <h1 className="text-4xl lg:text-5xl font-bold text-slate-900 mb-4 overflow-hidden leading-tight">
-                    Master AI Skills in{" "}
-                    <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
-                      30 Minutes a Day
-                    </span>
+                    {isAuthenticated ? (
+                      <>
+                        Welcome back, {user?.name || user?.email}!{" "}
+                        <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+                          Continue Learning
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        Master AI Skills in{" "}
+                        <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+                          30 Minutes a Day
+                        </span>
+                      </>
+                    )}
                   </h1>
 
                   <p className="text-lg text-slate-600 mb-8 leading-relaxed">
-                    Stop wasting time on scattered tutorials. Our sequential
-                    learning platform ensures you master every concept before
-                    moving forward.
-                    <span className="font-semibold text-slate-800">
-                      {" "}
-                      Join 12,000+ professionals who&apos;ve accelerated their
-                      careers.
-                    </span>
+                    {isAuthenticated ? (
+                      <>
+                        Ready to continue your learning journey? Pick up where you left off
+                        or explore new courses to expand your skills.
+                        <span className="font-semibold text-slate-800">
+                          {" "}
+                          You&apos;re part of 12,000+ professionals who&apos;ve accelerated their
+                          careers.
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        Stop wasting time on scattered tutorials. Our sequential
+                        learning platform ensures you master every concept before
+                        moving forward.
+                        <span className="font-semibold text-slate-800">
+                          {" "}
+                          Join 12,000+ professionals who&apos;ve accelerated their
+                          careers.
+                        </span>
+                      </>
+                    )}
                   </p>
 
-                  {/* Lead Capture Form */}
-                  {!isSubmitted ? (
-                    <form onSubmit={handleLeadSubmit} className="space-y-4">
-                      <div className="relative">
-                        <input
-                          type="email"
-                          value={email}
-                          onChange={(e) => setEmail(e.target.value)}
-                          placeholder="Enter your work email"
-                          className="w-full px-6 py-4 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg"
-                          required
-                        />
-                        <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                          <CheckCircle className="w-5 h-5 text-green-500" />
+                  {/* Lead Capture Form or Welcome Back */}
+                  {isAuthenticated ? (
+                    <div className="space-y-4">
+                      <div className="text-center py-4">
+                        <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
+                        <h3 className="text-2xl font-bold text-slate-800 mb-2">
+                          Welcome back!
+                        </h3>
+                        <p className="text-slate-600 mb-6">
+                          Ready to continue your learning journey?
+                        </p>
+                        <div className="flex space-x-4">
+                          <Link href="/courses">
+                            <ShimmerButton className="flex-1 py-4 text-lg font-semibold">
+                              Browse Courses
+                            </ShimmerButton>
+                          </Link>
+                          <Link href="/admin">
+                            {isAdmin && (
+                              <InteractiveHoverButton className="py-4 text-lg font-semibold">
+                                Admin Panel
+                              </InteractiveHoverButton>
+                            )}
+                          </Link>
                         </div>
                       </div>
-                      <ShimmerButton
-                        type="submit"
-                        disabled={isSubmitting}
-                        className="w-full py-4 text-lg font-semibold"
-                      >
-                        {isSubmitting
-                          ? "Starting..."
-                          : "Start Free – No Credit Card Required"}
-                      </ShimmerButton>
-                      <p className="text-sm text-slate-500 text-center">
-                        ✨ Get instant access to 3 free lessons + AI cheat sheet
-                      </p>
-                    </form>
-                  ) : (
-                    <div className="text-center py-4">
-                      <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
-                      <h3 className="text-2xl font-bold text-slate-800 mb-2">
-                        Welcome aboard!
-                      </h3>
-                      <p className="text-slate-600">
-                        Check your email for exclusive learning resources and
-                        your AI cheat sheet.
-                      </p>
                     </div>
+                  ) : (
+                    <>
+                      {!isSubmitted ? (
+                        <form onSubmit={handleLeadSubmit} className="space-y-4">
+                          <div className="relative">
+                            <input
+                              type="email"
+                              value={email}
+                              onChange={(e) => setEmail(e.target.value)}
+                              placeholder="Enter your work email"
+                              className="w-full px-6 py-4 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg"
+                              required
+                            />
+                            <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                              <CheckCircle className="w-5 h-5 text-green-500" />
+                            </div>
+                          </div>
+                          <ShimmerButton
+                            type="submit"
+                            disabled={isSubmitting}
+                            className="w-full py-4 text-lg font-semibold"
+                          >
+                            {isSubmitting
+                              ? "Starting..."
+                              : "Start Free – No Credit Card Required"}
+                          </ShimmerButton>
+                          <p className="text-sm text-slate-500 text-center">
+                            ✨ Get instant access to 3 free lessons + AI cheat sheet
+                          </p>
+                        </form>
+                      ) : (
+                        <div className="text-center py-4">
+                          <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
+                          <h3 className="text-2xl font-bold text-slate-800 mb-2">
+                            Welcome aboard!
+                          </h3>
+                          <p className="text-slate-600">
+                            Check your email for exclusive learning resources and
+                            your AI cheat sheet.
+                          </p>
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
               </div>

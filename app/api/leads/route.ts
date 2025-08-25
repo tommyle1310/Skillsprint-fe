@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(request: NextRequest) {
   try {
@@ -6,71 +6,56 @@ export async function POST(request: NextRequest) {
 
     if (!email) {
       return NextResponse.json(
-        { error: "Email is required" },
+        { message: 'Email is required' },
         { status: 400 }
       );
     }
 
-    // Create lead via GraphQL API
-    const leadResponse = await fetch(`${process.env.NEXT_PUBLIC_GRAPHQL_URL || 'http://localhost:3001/graphql'}`, {
-      method: "POST",
+    // Create lead via backend GraphQL
+    const response = await fetch(`${process.env.API_URL || 'http://localhost:4000'}/graphql`, {
+      method: 'POST',
       headers: {
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         query: `
           mutation CreateLead($email: String!) {
-            createLead(email: $email) {
-              id
-              email
-              createdAt
-            }
+            createLead(email: $email) { id email createdAt }
           }
         `,
         variables: { email },
       }),
     });
 
-    if (!leadResponse.ok) {
-      throw new Error("Failed to create lead");
+    const data = await response.json();
+
+    if (data.errors) {
+      return NextResponse.json(
+        { message: data.errors[0].message || 'Failed to create lead' },
+        { status: 400 }
+      );
     }
 
-    // Track page view for analytics
-    try {
-      await fetch(`${process.env.NEXT_PUBLIC_GRAPHQL_URL || 'http://localhost:3001/graphql'}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          query: `
-            mutation TrackPageView {
-              trackPageView {
-                success
-                message
-              }
-            }
-          `,
-        }),
-      });
-    } catch (trackError) {
-      console.error("Failed to track page view:", trackError);
-      // Don't fail the lead creation if tracking fails
-    }
-
-    return NextResponse.json(
-      { 
-        success: true, 
-        message: "Lead created successfully",
-        lead: { email, createdAt: new Date().toISOString() }
-      },
-      { status: 201 }
-    );
+    return NextResponse.json({ success: true, lead: data.data.createLead });
   } catch (error) {
-    console.error("Error creating lead:", error);
-    return NextResponse.json(
-      { error: "Failed to create lead" },
-      { status: 500 }
-    );
+    console.error('Lead creation error:', error);
+    return NextResponse.json({ message: 'Internal server error' }, { status: 500 });
+  }
+}
+
+export async function GET() {
+  try {
+    const response = await fetch(`${process.env.API_URL || 'http://localhost:4000'}/graphql`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query: `query { leads { id email createdAt } }` }),
+    });
+    const data = await response.json();
+    if (data.errors) {
+      return NextResponse.json({ message: 'Failed to fetch leads' }, { status: 400 });
+    }
+    return NextResponse.json({ success: true, leads: data.data.leads });
+  } catch (e) {
+    return NextResponse.json({ message: 'Internal server error' }, { status: 500 });
   }
 }

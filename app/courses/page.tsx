@@ -10,11 +10,14 @@ import {
   Filter,
   Clock,
   Users,
+  Plus,
 } from "lucide-react";
 import { BorderBeam } from "@/components/magicui/border-beam";
 import { ShimmerButton } from "@/components/magicui/shimmer-button";
 import { InteractiveHoverButton } from "@/components/magicui/interactive-hover-button";
 import { AnimatedList } from "@/components/magicui/animated-list";
+import { useAuthStore } from "@/lib/authStore";
+import { LoadingSpinner } from "@/components/LoadingSpinner";
 
 interface Course {
   id: string;
@@ -35,9 +38,50 @@ export default function CoursesPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [isLoading, setIsLoading] = useState(true);
+  
+  const { isAdmin } = useAuthStore();
 
-  // Mock data - replace with actual API call
+  // Fetch courses from API
   useEffect(() => {
+    const fetchCourses = async () => {
+      try {
+        const response = await fetch("/api/courses");
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success) {
+            // Transform backend data to match frontend interface
+            const transformedCourses = data.courses.map((course: any) => ({
+              id: course.id,
+              title: course.title,
+              description: course.description,
+              price: course.price / 100, // Convert from cents
+              image: course.avatar || "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=400&h=300&fit=crop",
+              lessons: course.lessons?.length || 0,
+              duration: `${Math.ceil((course.lessons?.length || 0) * 0.4)} hours`, // Estimate duration
+              rating: 4.5 + Math.random() * 0.5, // Mock rating
+              students: Math.floor(Math.random() * 2000) + 100, // Mock student count
+              slug: course.slug,
+            }));
+            setCourses(transformedCourses);
+            setFilteredCourses(transformedCourses);
+          }
+        } else {
+          // Fallback to mock data if API fails
+          setMockCourses();
+        }
+      } catch (error) {
+        console.error("Failed to fetch courses:", error);
+        // Fallback to mock data
+        setMockCourses();
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchCourses();
+  }, []);
+
+  const setMockCourses = () => {
     const mockCourses: Course[] = [
       {
         id: "1",
@@ -127,7 +171,7 @@ export default function CoursesPage() {
     setCourses(mockCourses);
     setFilteredCourses(mockCourses);
     setIsLoading(false);
-  }, []);
+  };
 
   const filterCourses = useCallback(() => {
     let filtered = courses;
@@ -175,7 +219,7 @@ export default function CoursesPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+        <LoadingSpinner size="lg" />
       </div>
     );
   }
@@ -227,6 +271,16 @@ export default function CoursesPage() {
                 ))}
               </select>
             </div>
+
+            {/* Admin Add Course Button */}
+            {isAdmin && (
+              <Link href="/admin/courses/new">
+                <ShimmerButton className="flex items-center">
+                  <Plus className="w-5 h-5 mr-2" />
+                  Add Course
+                </ShimmerButton>
+              </Link>
+            )}
           </div>
         </div>
 

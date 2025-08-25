@@ -3,6 +3,9 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import Navigation from "@/components/Navigation";
 import { Toaster } from "react-hot-toast";
+import { ApolloProvider } from "@/providers/ApolloProvider";
+import { AuthProvider } from "@/providers/AuthProvider";
+import { AuthCheck } from "@/components/AuthCheck";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -19,11 +22,17 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <Navigation />
-        <main className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
-          {children}
-        </main>
-        <Toaster position="top-right" />
+        <ApolloProvider>
+          <AuthProvider>
+            <Navigation />
+            <main className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+              <AuthCheck>
+                {children}
+              </AuthCheck>
+            </main>
+            <Toaster position="top-right" />
+          </AuthProvider>
+        </ApolloProvider>
       </body>
     </html>
   );
