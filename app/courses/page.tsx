@@ -18,6 +18,7 @@ import { InteractiveHoverButton } from "@/components/magicui/interactive-hover-b
 import { AnimatedList } from "@/components/magicui/animated-list";
 import { useAuthStore } from "@/lib/authStore";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface Course {
   id: string;
@@ -39,7 +40,7 @@ export default function CoursesPage() {
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [isLoading, setIsLoading] = useState(true);
   
-  const { isAdmin } = useAuthStore();
+  const { isAdmin, user } = useAuthStore();
 
   // Fetch courses from API
   useEffect(() => {
@@ -54,11 +55,11 @@ export default function CoursesPage() {
               id: course.id,
               title: course.title,
               description: course.description,
-              price: course.price / 100, // Convert from cents
+              price: (course.price / 100).toFixed(2), // Convert from cents
               image: course.avatar || "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=400&h=300&fit=crop",
               lessons: course.lessons?.length || 0,
               duration: `${Math.ceil((course.lessons?.length || 0) * 0.4)} hours`, // Estimate duration
-              rating: 4.5 + Math.random() * 0.5, // Mock rating
+              rating: (4.5 + Math.random() * 0.5).toFixed(1), // Mock rating
               students: Math.floor(Math.random() * 2000) + 100, // Mock student count
               slug: course.slug,
             }));
@@ -257,24 +258,25 @@ export default function CoursesPage() {
             {/* Category Filter */}
             <div className="flex items-center space-x-2">
               <Filter className="w-5 h-5 text-slate-400" />
-              <select
-                value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
-                className="px-4 py-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                {courseCategories.map((category) => (
-                  <option key={category} value={category}>
-                    {category === "all"
-                      ? "All Categories"
-                      : category.charAt(0).toUpperCase() + category.slice(1)}
-                  </option>
-                ))}
-              </select>
+              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                <SelectTrigger>
+                  <SelectValue placeholder="All Categories" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    {courseCategories.map((category) => (
+                      <SelectItem key={category} value={category}>
+                        {category === "all" ? "All Categories" : category.charAt(0).toUpperCase() + category.slice(1)}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
             </div>
 
-            {/* Admin Add Course Button */}
-            {isAdmin && (
-              <Link href="/admin/courses/new">
+            {/* Admin/Teacher Add Course Button */}
+            {(isAdmin || user?.role === "TEACHER") && (
+              <Link href="/courses/new">
                 <ShimmerButton className="flex items-center">
                   <Plus className="w-5 h-5 mr-2" />
                   Add Course

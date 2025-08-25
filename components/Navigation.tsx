@@ -7,6 +7,7 @@ import { useState } from "react";
 import { ShimmerButton } from "./magicui/shimmer-button";
 import { InteractiveHoverButton } from "./magicui/interactive-hover-button";
 import { useAuthStore } from "@/lib/authStore";
+import { signOut } from "next-auth/react";
 
 export default function Navigation() {
   const pathname = usePathname();
@@ -23,11 +24,17 @@ export default function Navigation() {
   // Add admin link only for admin users
   if (isAdmin) {
     navItems.push({ href: "/admin", label: "Admin", icon: BarChart3 });
+    navItems.push({ href: "/promotions", label: "Promotion", icon: BarChart3 });
   }
 
   const isActive = (href: string) => pathname === href;
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      // end NextAuth session (if any) without full-page redirect
+      await signOut({ redirect: false });
+    } catch {}
+    // clear local auth store regardless of next-auth state
     logout();
     setIsMenuOpen(false);
   };
@@ -78,8 +85,10 @@ export default function Navigation() {
                   </span>
                 </div>
                 <InteractiveHoverButton onClick={handleLogout}>
-                  <LogOut className="w-4 h-4 mr-2" />
-                  Logout
+                  <div className="flex items-center gap-2">
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Logout
+                  </div>
                 </InteractiveHoverButton>
               </div>
             ) : (

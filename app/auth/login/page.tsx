@@ -56,6 +56,10 @@ export default function LoginPage() {
     setEmail("demo@skillsprint.com");
     setPassword("password123");
   };
+  const handleAdminLogin = () => {
+    setEmail("admin@gmail.com");
+    setPassword("admin123");
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50 py-12 px-4 sm:px-6 lg:px-8">
@@ -191,6 +195,15 @@ export default function LoginPage() {
                   className="text-sm text-slate-500 hover:text-slate-700 font-medium"
                 >
                   Try demo account
+                </button>
+              </div>
+              <div className="text-center">
+                <button
+                  type="button"
+                  onClick={handleAdminLogin}
+                  className="text-sm text-slate-500 hover:text-slate-700 font-medium"
+                >
+                  Try admin account
                 </button>
               </div>
             </form>

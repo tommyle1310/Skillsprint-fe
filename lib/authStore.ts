@@ -7,6 +7,7 @@ interface User {
   name?: string;
   avatar?: string;
   createdAt: string;
+  role?: 'USER' | 'ADMIN' | 'LEAD' | 'TEACHER';
 }
 
 interface AuthState {
@@ -40,7 +41,7 @@ export const useAuthStore = create<AuthState>()(
           user,
           token,
           isAuthenticated: true,
-          isAdmin: user.email === 'admin@skillsprint.com', // Simple admin check
+          isAdmin: user.role === 'ADMIN' || user.email === 'admin@skillsprint.com',
           loading: false,
         });
       },
@@ -72,7 +73,6 @@ export const useAuthStore = create<AuthState>()(
 
         try {
           set({ loading: true });
-          // Verify token with backend
           const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/graphql`, {
             method: 'POST',
             headers: {
@@ -88,32 +88,41 @@ export const useAuthStore = create<AuthState>()(
                     name
                     avatar
                     createdAt
+                    role
                   }
                 }
               `
             }),
           });
 
-          if (response.ok) {
-            const data = await response.json();
-            if (data.data?.me) {
-              const user = data.data.me;
-              set({
-                user,
-                isAuthenticated: true,
-                isAdmin: user.email === 'admin@skillsprint.com',
-                loading: false,
-                initialized: true,
-              });
+          if (!response.ok) {
+            // Only clear auth on explicit unauthorized
+            if (response.status === 401 || response.status === 403) {
+              set({ user: null, token: null, isAuthenticated: false, isAdmin: false, loading: false, initialized: true });
             } else {
-              get().logout();
+              set({ loading: false, initialized: true });
             }
+            return;
+          }
+
+          const data = await response.json();
+          if (data.data?.me) {
+            const user = data.data.me as User;
+            set({
+              user,
+              isAuthenticated: true,
+              isAdmin: user.role === 'ADMIN' || user.email === 'admin@skillsprint.com',
+              loading: false,
+              initialized: true,
+            });
           } else {
-            get().logout();
+            // Do not wipe on schema or other errors; only mark initialized
+            set({ loading: false, initialized: true });
           }
         } catch (error) {
           console.error('Auth check failed:', error);
-          get().logout();
+          // Network/other errors: do not wipe auth
+          set({ loading: false, initialized: true });
         }
       },
     }),

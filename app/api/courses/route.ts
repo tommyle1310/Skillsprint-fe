@@ -73,7 +73,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { title, description, price, slug } = await request.json();
+    const { title, description, price, slug, avatar } = await request.json();
 
     if (!title || !description || !price || !slug) {
       return NextResponse.json(
@@ -91,8 +91,8 @@ export async function POST(request: NextRequest) {
       },
       body: JSON.stringify({
         query: `
-          mutation CreateCourse($title: String!, $description: String!, $price: Int!, $slug: String!) {
-            createCourse(title: $title, description: $description, price: $price, slug: $slug) {
+          mutation CreateCourse($title: String!, $description: String!, $price: Int!, $slug: String!, $avatar: String) {
+            createCourse(title: $title, description: $description, price: $price, slug: $slug, avatar: $avatar) {
               id
               title
               slug
@@ -107,6 +107,7 @@ export async function POST(request: NextRequest) {
           description,
           price: parseInt(price),
           slug,
+          avatar,
         },
       }),
     });

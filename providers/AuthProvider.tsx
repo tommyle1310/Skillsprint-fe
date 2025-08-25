@@ -6,7 +6,7 @@ import { SessionProvider, useSession } from "next-auth/react";
 
 function AuthSync() {
   const { data: session, status } = useSession();
-  const { login, logout, initialized, initialize } = useAuthStore();
+  const { login, initialized, initialize, token } = useAuthStore();
 
   useEffect(() => {
     if (!initialized) initialize();
@@ -20,13 +20,13 @@ function AuthSync() {
         name: session.user.name || undefined,
         avatar: session.user.image || undefined,
         createdAt: new Date().toISOString(),
+        role: ((session.user as any).role as any) || 'USER',
       };
-      // Mark as logged in for app UI; token is managed by NextAuth
-      login(user, "nextauth");
-    } else if (status === "unauthenticated") {
-      logout();
+      // Preserve existing JWT token if present to prevent wiping it
+      login(user, token || "nextauth");
     }
-  }, [status, session, login, logout]);
+    // Do not auto-logout on unauthenticated transitions; preserve JWT store
+  }, [status, session, login, token]);
 
   return null;
 }

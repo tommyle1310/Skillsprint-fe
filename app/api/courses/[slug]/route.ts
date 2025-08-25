@@ -28,6 +28,7 @@ export async function GET(
               title
               slug
               avatar
+              createdById
               description
               price
               createdAt
@@ -37,6 +38,12 @@ export async function GET(
                 order
                 avatar
                 videoUrl
+              }
+              quizzes {
+                id
+                title
+                order
+                avatar
               }
             }
           }

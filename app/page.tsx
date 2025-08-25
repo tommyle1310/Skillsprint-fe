@@ -42,12 +42,171 @@ import { ScrollProgress } from "@/components/magicui/scroll-progress";
 import { AnimatedSubscribeButton } from "@/components/magicui/animated-subscribe-button";
 import { useAuthStore } from "@/lib/authStore";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
+import { Button } from "@/components/ui/button";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { ChevronDown } from "lucide-react";
+import AdminHomepage from "@/components/screens/Home/AdminHomepage";
+
+function AdminInquiriesWidget() {
+  const [page, setPage] = useState(1);
+  const pageSize = 10;
+  const [rows, setRows] = useState<any[]>([]);
+  const [total, setTotal] = useState(0);
+  const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const res = await fetch(
+        `/api/inquiries?page=${page}&pageSize=${pageSize}`
+      );
+      const data = await res.json();
+      if (!cancelled && data.success) {
+        setRows(data.inquiries);
+        setTotal(data.total);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [page]);
+
+  const setStatus = async (id: string, status: string) => {
+    try {
+      setUpdatingId(id);
+      const res = await fetch("/api/inquiries", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, status }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setRows((prev) =>
+          prev.map((r) =>
+            r.id === id ? { ...r, status: data.inquiry.status } : r
+          )
+        );
+      }
+    } finally {
+      setUpdatingId(null);
+    }
+  };
+
+  return (
+    <div className="relative rounded-2xl overflow-hidden">
+      <div className="bg-white rounded-2xl p-6 border">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="font-semibold">Inquiries</h2>
+          <div className="text-sm text-slate-500">
+            Page {page} of {totalPages}
+          </div>
+        </div>
+        <div className="overflow-hidden rounded-md border">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Subject</TableHead>
+                <TableHead>From</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {rows.map((q) => (
+                <TableRow key={q.id}>
+                  <TableCell className="font-medium">{q.subject}</TableCell>
+                  <TableCell>
+                    {q.name} • {q.email}
+                  </TableCell>
+                  <TableCell>{q.status}</TableCell>
+                  <TableCell className="text-right">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={updatingId === q.id}
+                        >
+                          Set status <ChevronDown className="ml-1 h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuLabel>Choose</DropdownMenuLabel>
+                        {["OPEN", "IN_PROGRESS", "RESOLVED", "CLOSED"].map(
+                          (s) => (
+                            <DropdownMenuItem
+                              key={s}
+                              onClick={() => setStatus(q.id, s)}
+                              disabled={q.status === s || updatingId === q.id}
+                            >
+                              {s}
+                            </DropdownMenuItem>
+                          )
+                        )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              ))}
+              {rows.length === 0 && (
+                <TableRow>
+                  <TableCell
+                    colSpan={4}
+                    className="h-24 text-center text-slate-500"
+                  >
+                    No inquiries yet.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
+        <div className="flex items-center justify-between mt-4">
+          <div className="text-sm text-slate-500">Total {total}</div>
+          <div className="space-x-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page <= 1 || updatingId !== null}
+            >
+              Previous
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              disabled={page >= totalPages || updatingId !== null}
+            >
+              Next
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function HomePage() {
   const [email, setEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
-  
+
   const { isAuthenticated, isAdmin, user } = useAuthStore();
 
   const [stats, setStats] = useState({
@@ -230,32 +389,160 @@ export default function HomePage() {
     },
   ];
 
+  // Role-based home switch
+  const role = user?.role;
+  if (isAuthenticated) {
+    if (role === "ADMIN") {
+      return (
+        <div className="min-h-screen py-12 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+         <div className="flex items-center justify-between mb-6">
+              <div className="flex flex-col">
+                <h1 className="text-4xl font-bold text-slate-900 mb-4">
+                  Admin Dashboard
+                </h1>
+                <p className="text-lg text-slate-600">
+                  Monitor your e-learning platform performance and growth
+                  metrics
+                </p>
+              </div>
+              <Link href="/users">
+                <ShimmerButton>Manage Users</ShimmerButton>
+              </Link>
+            </div>
+          <AdminHomepage />
+          <div className="mt-4">           
+            <div className="grid lg:grid-cols-3 gap-6">
+              {/* Stats */}
+              <div className="lg:col-span-1 space-y-6">
+                <div className="relative rounded-2xl overflow-hidden">
+                  <BorderBeam className="rounded-2xl" />
+                  <div className="bg-white rounded-2xl p-6 border">
+                    <h2 className="font-semibold mb-4">Quick Links</h2>
+                    <div className="flex gap-3">
+                      <Link href="/courses/new">
+                        <ShimmerButton>Create Course</ShimmerButton>
+                      </Link>
+                      <Link href="/courses">
+                        <ShimmerButton>All Courses</ShimmerButton>
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+                <div className="relative rounded-2xl overflow-hidden">
+                  <BorderBeam className="rounded-2xl" />
+                  <div className="bg-white rounded-2xl p-6 border">
+                    <h2 className="font-semibold mb-2">Today</h2>
+                    <div className="grid grid-cols-3 gap-4 text-center">
+                      <div>
+                        <div className="text-2xl font-bold">--</div>
+                        <div className="text-xs text-slate-500">Leads</div>
+                      </div>
+                      <div>
+                        <div className="text-2xl font-bold">--</div>
+                        <div className="text-xs text-slate-500">Orders</div>
+                      </div>
+                      <div>
+                        <div className="text-2xl font-bold">--</div>
+                        <div className="text-xs text-slate-500">Revenue</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              {/* Inquiries Table */}
+              <div className="lg:col-span-2">
+                <AdminInquiriesWidget />
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+    if (role === "TEACHER") {
+      return (
+        <div className="min-h-screen py-12">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between mb-6">
+              <h1 className="text-2xl font-bold">Teacher Dashboard</h1>
+              <Link href="/courses/new">
+                <ShimmerButton className="flex items-center">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Create Course
+                </ShimmerButton>
+              </Link>
+            </div>
+            <div className="grid md:grid-cols-2 gap-6">
+              <div className="relative rounded-2xl overflow-hidden">
+                <BorderBeam className="rounded-2xl" />
+                <div className="bg-white rounded-2xl p-6 border">
+                  <h2 className="font-semibold mb-2">My Courses</h2>
+                  <div className="text-sm text-slate-600">No courses yet.</div>
+                </div>
+              </div>
+              <div className="relative rounded-2xl overflow-hidden">
+                <BorderBeam className="rounded-2xl" />
+                <div className="bg-white rounded-2xl p-6 border">
+                  <h2 className="font-semibold mb-2">Students & Earnings</h2>
+                  <div className="text-sm text-slate-600">
+                    Metrics appear after enrollments.
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+    // USER / LEAD default
+    return (
+      <div className="min-h-screen py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid md:grid-cols-2 gap-6">
+            <div className="relative rounded-2xl overflow-hidden">
+              <BorderBeam className="rounded-2xl" />
+              <div className="bg-white rounded-2xl p-6 border">
+                <h2 className="font-semibold mb-2">My Courses</h2>
+                <div className="text-sm text-slate-600">
+                  No enrollments yet.
+                </div>
+              </div>
+            </div>
+            <div className="relative rounded-2xl overflow-hidden">
+              <BorderBeam className="rounded-2xl" />
+              <div className="bg-white rounded-2xl p-6 border">
+                <h2 className="font-semibold mb-2">Progress</h2>
+                <div className="text-sm text-slate-600">
+                  Start a course to see progress.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen">
-      {/* Hero Section */}
       <section className="relative overflow-hidden bg-gradient-to-br from-slate-50 via-white to-blue-50 py-20 lg:py-32">
         <GridBeams className="absolute inset-0">
           <div></div>
         </GridBeams>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
-            {/* Left: App Mockup */}
             <div className="relative order-2 lg:order-1">
               <div className="relative mx-auto w-2xl ">
                 <Safari
-                url="https://www.skillsprint.com"
+                  url="https://www.skillsprint.com"
                   videoSrc="https://res.cloudinary.com/dlavqnrlx/video/upload/v1724035988/work_iu9npi.mp4"
                   className="w-full h-auto drop-shadow-2xl"
                 />
               </div>
             </div>
-
-            {/* Right: Floating Card */}
             <div className="order-1  flex lg:order-2 relative justify-end">
               <div className="relative max-w-lg mx-auto bg-gray-50 lg:mx-0 p-8  backdrop-blur-sm rounded-3xl  overflow-hidden shadow-2xl border border-white/20">
                 <BorderBeam />
                 <ProgressiveBlur position="bottom" className="rounded-3xl" />
-
                 <div className="relative z-10">
                   <Badge
                     variant="secondary"
@@ -264,45 +551,33 @@ export default function HomePage() {
                     <Zap className="w-3 h-3 mr-1" />
                     New Learning Method
                   </Badge>
-
                   <h1 className="text-4xl lg:text-5xl font-bold text-slate-900 mb-4 overflow-hidden leading-tight">
-                    {isAuthenticated ? (
-                      <>
-                        Welcome back, {user?.name || user?.email}!{" "}
-                        <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
-                          Continue Learning
-                        </span>
-                      </>
-                    ) : (
-                      <>
-                        Master AI Skills in{" "}
-                        <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
-                          30 Minutes a Day
-                        </span>
-                      </>
-                    )}
+                    Master AI Skills in{" "}
+                    <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+                      30 Minutes a Day
+                    </span>
                   </h1>
-
                   <p className="text-lg text-slate-600 mb-8 leading-relaxed">
                     {isAuthenticated ? (
                       <>
-                        Ready to continue your learning journey? Pick up where you left off
-                        or explore new courses to expand your skills.
+                        Ready to continue your learning journey? Pick up where
+                        you left off or explore new courses to expand your
+                        skills.
                         <span className="font-semibold text-slate-800">
                           {" "}
-                          You&apos;re part of 12,000+ professionals who&apos;ve accelerated their
-                          careers.
+                          You&apos;re part of 12,000+ professionals who&apos;ve
+                          accelerated their careers.
                         </span>
                       </>
                     ) : (
                       <>
                         Stop wasting time on scattered tutorials. Our sequential
-                        learning platform ensures you master every concept before
-                        moving forward.
+                        learning platform ensures you master every concept
+                        before moving forward.
                         <span className="font-semibold text-slate-800">
                           {" "}
-                          Join 12,000+ professionals who&apos;ve accelerated their
-                          careers.
+                          Join 12,000+ professionals who&apos;ve accelerated
+                          their careers.
                         </span>
                       </>
                     )}
@@ -362,7 +637,8 @@ export default function HomePage() {
                               : "Start Free – No Credit Card Required"}
                           </ShimmerButton>
                           <p className="text-sm text-slate-500 text-center">
-                            ✨ Get instant access to 3 free lessons + AI cheat sheet
+                            ✨ Get instant access to 3 free lessons + AI cheat
+                            sheet
                           </p>
                         </form>
                       ) : (
@@ -372,8 +648,8 @@ export default function HomePage() {
                             Welcome aboard!
                           </h3>
                           <p className="text-slate-600">
-                            Check your email for exclusive learning resources and
-                            your AI cheat sheet.
+                            Check your email for exclusive learning resources
+                            and your AI cheat sheet.
                           </p>
                         </div>
                       )}
@@ -890,48 +1166,83 @@ export default function HomePage() {
                         {[...Array(5)].map((_, i) => (
                           <Star
                             key={i}
-                            className={`w-4 h-4 ${
+                            className={
                               i < testimonial.rating
-                                ? "text-yellow-500 fill-current"
-                                : "text-slate-300"
-                            }`}
+                                ? "w-4 h-4 text-yellow-500 fill-current"
+                                : "w-4 h-4 text-slate-300"
+                            }
                           />
                         ))}
                       </div>
-                      <blockquote className="text-lg text-slate-700 italic mb-4 leading-relaxed">
-                        &quot;{testimonial.content}&quot;
-                      </blockquote>
-                      <div className="flex items-center">
+                      <div className="flex items-center justify-center mb-4">
                         <img
                           src={testimonial.avatar}
                           alt={testimonial.name}
-                          className="w-12 h-12 rounded-full mr-3"
+                          className="w-12 h-12 rounded-full object-cover border-2 border-white"
                         />
-                        <div>
-                          <div className="font-semibold text-slate-900">
-                            {testimonial.name}
-                          </div>
-                          <div className="text-sm text-slate-600">
-                            {testimonial.role}
-                          </div>
-                          <div className="text-xs text-slate-500">
-                            {testimonial.company}
-                          </div>
-                        </div>
                       </div>
+                      <p className="text-lg text-slate-700 mb-4">
+                        &quot;{testimonial.content}&quot;
+                      </p>
+                      <p className="text-sm font-semibold text-slate-900">
+                        {testimonial.name}
+                      </p>
+                      <p className="text-xs text-slate-500">
+                        {testimonial.role}, {testimonial.company}
+                      </p>
                     </div>
                   </div>
                 ))}
               </Marquee>
             </div>
 
-            {/* Right: Phone Mockup with Video */}
-            <div className="relative col-span-4">
-              <div className="mx-auto max-w-xs">
-                <Iphone15Pro
-                  videoSrc="https://res.cloudinary.com/dlavqnrlx/video/upload/v1756092134/nkkg5nldonnsxz9g8lnn.mp4"
-                  className="w-full h-auto drop-shadow-2xl"
-                />
+            {/* Right: Testimonial Details */}
+            <div className="col-span-4">
+              <div className="bg-white rounded-2xl p-6 shadow-lg border border-slate-100">
+                <h3 className="text-lg font-semibold text-slate-900 mb-4">
+                  Why Choose SkillSprint?
+                </h3>
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                      <CheckCircle className="w-4 h-4 text-blue-600" />
+                    </div>
+                    <div>
+                      <div className="font-medium text-slate-900">
+                        Sequential Learning
+                      </div>
+                      <div className="text-sm text-slate-600">
+                        Master concepts step-by-step
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
+                      <Star className="w-4 h-4 text-purple-600" />
+                    </div>
+                    <div>
+                      <div className="font-medium text-slate-900">
+                        4.9/5 Rating
+                      </div>
+                      <div className="text-sm text-slate-600">
+                        From 10,000+ students
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                      <Zap className="w-4 h-4 text-green-600" />
+                    </div>
+                    <div>
+                      <div className="font-medium text-slate-900">
+                        30-Day Guarantee
+                      </div>
+                      <div className="text-sm text-slate-600">
+                        Money-back if not satisfied
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

@@ -18,7 +18,11 @@ import { BorderBeam } from "@/components/magicui/border-beam";
 import { ShimmerButton } from "@/components/magicui/shimmer-button";
 import { InteractiveHoverButton } from "@/components/magicui/interactive-hover-button";
 import { useAuthStore } from "@/lib/authStore";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
+import { AnimatedSubscribeButton } from "@/components/magicui/animated-subscribe-button";
 
 interface Lesson {
   id: string;
@@ -28,6 +32,8 @@ interface Lesson {
   videoUrl?: string;
 }
 
+interface QuizItem { id: string; title: string; order: number; avatar?: string }
+
 interface Course {
   id: string;
   title: string;
@@ -36,7 +42,9 @@ interface Course {
   description: string;
   price: number;
   lessons: Lesson[];
+  quizzes?: QuizItem[];
   createdAt: string;
+  createdById?: string;
 }
 
 export default function CourseDetailPage() {
@@ -47,10 +55,9 @@ export default function CourseDetailPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   
-  const { isAuthenticated, isAdmin } = useAuthStore();
+  const { isAuthenticated, isAdmin, user } = useAuthStore();
 
-  useEffect(() => {
-    const fetchCourse = async () => {
+  const refresh = async () => {
       try {
         const response = await fetch(`/api/courses/${slug}`);
         if (response.ok) {
@@ -74,12 +81,9 @@ export default function CourseDetailPage() {
       } finally {
         setIsLoading(false);
       }
-    };
+  };
 
-    if (slug) {
-      fetchCourse();
-    }
-  }, [slug]);
+  useEffect(() => { if (slug) refresh(); }, [slug]);
 
   if (isLoading) {
     return (
@@ -96,10 +100,16 @@ export default function CourseDetailPage() {
           <h1 className="text-4xl font-bold text-slate-900">Course Not Found</h1>
           <p className="text-slate-600">{error || "The course you're looking for doesn't exist."}</p>
           <Link href="/courses">
-            <ShimmerButton>
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Courses
-            </ShimmerButton>
+            <AnimatedSubscribeButton>
+              <span className="flex items-center gap-2">
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back to Courses
+              </span>
+              <span className="flex items-center gap-2">
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back to Courses
+              </span>
+            </AnimatedSubscribeButton>
           </Link>
         </div>
       </div>
@@ -112,10 +122,16 @@ export default function CourseDetailPage() {
         {/* Back Button */}
         <div className="mb-8">
           <Link href="/courses">
-            <InteractiveHoverButton className="flex items-center">
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Courses
-            </InteractiveHoverButton>
+            <AnimatedSubscribeButton className="flex items-center">
+              <span className="flex items-center gap-2">
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back to Courses
+              </span>
+              <span className="flex items-center gap-2">
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back to Courses
+              </span>
+            </AnimatedSubscribeButton>
           </Link>
         </div>
 
@@ -183,55 +199,122 @@ export default function CourseDetailPage() {
               </div>
               
               <div className="flex space-x-4">
-                <ShimmerButton className="flex-1 h-12">
-                  <Play className="w-5 h-5 mr-2" />
-                  Enroll Now
-                </ShimmerButton>
-                
-                {isAdmin && (
-                  <Link href={`/admin/courses/${course.slug}/edit`}>
-                    <InteractiveHoverButton className="h-12">
-                      <Plus className="w-5 h-5 mr-2" />
-                      Edit Course
-                    </InteractiveHoverButton>
-                  </Link>
-                )}
+                {(() => {
+                  const isOwner = isAdmin || (user?.id && course.createdById && user.id === course.createdById);
+                  console.log('cehck isowner',  course)
+                  if (isOwner) {
+                    return (
+                      <Link href={`/courses/${course.slug}?edit=1`}>
+                        <InteractiveHoverButton className="h-12">
+                    <div className="flex items-center gap-2">
+                    <Plus className="w-5 h-5 mr-2" />
+                    Update Course
+                    </div>
+                        </InteractiveHoverButton>
+                      </Link>
+                    );
+                  }
+                  return (
+                    <ShimmerButton className="flex-1 h-12">
+                      <Play className="w-5 h-5 mr-2" />
+                      Enroll Now
+                    </ShimmerButton>
+                  );
+                })()}
               </div>
             </div>
           </div>
         </div>
 
-        {/* Course Content */}
+        {/* Teacher Tools */}
+        {(() => {
+          const isOwner = isAdmin || (user?.id && course.createdById && user.id === course.createdById);
+          if (!isOwner) return null;
+          return (
+            <div className="mb-10">
+              <h2 className="text-2xl font-bold text-slate-900 mb-4">Manage Course</h2>
+              <div className="flex flex-wrap gap-3">
+                {/* Add Lesson */}
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <InteractiveHoverButton>
+                      <Plus className="w-4 h-4 mr-2" /> Add Lesson
+                    </InteractiveHoverButton>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Add Lesson</DialogTitle>
+                    </DialogHeader>
+                    <AddLessonForm courseId={course.id} onCreated={refresh} />
+                  </DialogContent>
+                </Dialog>
+
+                {/* Add Quiz */}
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <InteractiveHoverButton>
+                      <Plus className="w-4 h-4 mr-2" /> Add Quiz
+                    </InteractiveHoverButton>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Add Quiz</DialogTitle>
+                    </DialogHeader>
+                    <AddQuizForm courseId={course.id} onCreated={refresh} />
+                  </DialogContent>
+                </Dialog>
+
+                {/* Reorder */}
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <InteractiveHoverButton>Reorder Items</InteractiveHoverButton>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Reorder Lessons & Quizzes</DialogTitle>
+                    </DialogHeader>
+                    <ReorderList course={course} onSaved={refresh} />
+                  </DialogContent>
+                </Dialog>
+              </div>
+            </div>
+          );
+        })()}
+
+        {/* Course Content (merged lessons + quizzes by order) */}
         <div className="mb-16">
           <h2 className="text-3xl font-bold text-slate-900 mb-8">Course Content</h2>
-          
           <div className="space-y-4">
-            {course.lessons.map((lesson, index) => (
-              <div key={lesson.id} className="relative">
+            {[
+              ...course.lessons.map((l)=> ({ kind:'lesson' as const, id:l.id, order:l.order, title:l.title })),
+              ...(course.quizzes?.map((q)=> ({ kind:'quiz' as const, id:q.id, order:q.order, title:q.title })) || []),
+            ]
+              .sort((a,b)=> a.order - b.order)
+              .map((item, index) => (
+              <div key={`${item.kind}-${item.id}`} className="relative">
                 <BorderBeam />
                 <div className="bg-white rounded-xl p-6 shadow-lg border border-slate-100">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-4">
                       <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
                         <span className="text-lg font-bold text-blue-600">
-                          {lesson.order}
+                          {item.order}
                         </span>
                       </div>
                       <div>
                         <h3 className="text-lg font-semibold text-slate-900">
-                          {lesson.title}
+                          {item.kind === 'lesson' ? 'Lesson: ' : 'Quiz: '} {item.title}
                         </h3>
                         <p className="text-slate-600">
-                          Lesson {lesson.order} of {course.lessons.length}
+                          {item.kind === 'lesson' ? 'Lesson' : 'Quiz'} #{item.order}
                         </p>
                       </div>
                     </div>
-                    
                     <div className="flex items-center space-x-2">
                       {isAuthenticated ? (
                         <InteractiveHoverButton>
                           <Play className="w-4 h-4 mr-2" />
-                          Start Lesson
+                          {item.kind === 'lesson' ? 'Start Lesson' : 'Start Quiz'}
                         </InteractiveHoverButton>
                       ) : (
                         <div className="flex items-center text-slate-400">
@@ -249,7 +332,7 @@ export default function CourseDetailPage() {
 
         {/* What You'll Learn */}
         <div className="mb-16">
-          <h2 className="text-3xl font-bold text-slate-900 mb-8">What You'll Learn</h2>
+          <h2 className="text-3xl font-bold text-slate-900 mb-8">What You&apos;ll Learn</h2>
           
           <div className="grid md:grid-cols-2 gap-6">
             <div className="space-y-4">
@@ -305,13 +388,123 @@ export default function CourseDetailPage() {
             <p className="text-lg text-slate-600 mb-8">
               Join thousands of students who have already transformed their careers with this course.
             </p>
-            <ShimmerButton className="h-14 text-lg px-8">
-              <Play className="w-6 h-6 mr-2" />
-              Enroll Now - ${course.price}
-            </ShimmerButton>
+            <InteractiveHoverButton className="h-14 text-lg px-8 mx-auto">
+            <div className="flex items-center gap-2">
+            <Play className="w-6 h-6 mr-2" />
+            Enroll Now - ${course.price}
+            </div>
+            </InteractiveHoverButton>
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+function AddLessonForm({ courseId, onCreated }: { courseId: string; onCreated: () => void }) {
+  const [title, setTitle] = useState("");
+  const [videoUrl, setVideoUrl] = useState("");
+  const [avatar, setAvatar] = useState("");
+  const [saving, setSaving] = useState(false);
+  return (
+    <div className="space-y-3">
+      <Input placeholder="Title" value={title} onChange={(e)=>setTitle(e.target.value)} />
+      <Input placeholder="MP4 URL" value={videoUrl} onChange={(e)=>setVideoUrl(e.target.value)} />
+      <Input placeholder="Thumbnail URL" value={avatar} onChange={(e)=>setAvatar(e.target.value)} />
+      <Button disabled={saving} onClick={async ()=>{
+        try{
+          setSaving(true);
+          const res = await fetch('/api/lessons', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ courseId, title, videoUrl, avatar }) });
+          const data = await res.json();
+          if (data.success) onCreated();
+        } finally { setSaving(false); }
+      }}>Create</Button>
+    </div>
+  );
+}
+
+function AddQuizForm({ courseId, onCreated }: { courseId: string; onCreated: () => void }) {
+  const [title, setTitle] = useState("");
+  const [questions, setQuestions] = useState([{ q: "", a: ["", ""], correct: 0 }]);
+  const [saving, setSaving] = useState(false);
+  return (
+    <div className="space-y-3">
+      <Input placeholder="Title" value={title} onChange={(e)=>setTitle(e.target.value)} />
+      <div className="space-y-2">
+        {questions.map((item, idx)=> (
+          <div key={idx} className="border p-2 rounded">
+            <Input placeholder="Question" value={item.q} onChange={(e)=>{
+              const next=[...questions]; next[idx].q=e.target.value; setQuestions(next);
+            }} />
+            <div className="grid grid-cols-2 gap-2 mt-2">
+              {item.a.map((ans, ai)=> (
+                <Input key={ai} placeholder={`Choice ${ai+1}`} value={ans} onChange={(e)=>{
+                  const next=[...questions]; next[idx].a[ai]=e.target.value; setQuestions(next);
+                }} />
+              ))}
+            </div>
+            <div className="flex gap-2 mt-2">
+              <Button variant="outline" size="sm" onClick={()=>{ const next=[...questions]; next[idx].a.push(""); setQuestions(next); }}>Add Choice</Button>
+              <Button variant="outline" size="sm" onClick={()=>{ const next=[...questions]; if (next[idx].a.length>2) { next[idx].a.pop(); setQuestions(next);} }}>Remove Choice</Button>
+            </div>
+          </div>
+        ))}
+        <Button variant="outline" size="sm" onClick={()=> setQuestions((q)=> [...q, { q: "", a: ["", ""], correct: 0 }])}>Add Question</Button>
+      </div>
+      <Button disabled={saving} onClick={async ()=>{
+        try{
+          setSaving(true);
+          const res = await fetch('/api/quizzes', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ courseId, title, questions }) });
+          const data = await res.json();
+          if (data.success) onCreated();
+        } finally { setSaving(false); }
+      }}>Create Quiz</Button>
+    </div>
+  );
+}
+
+function ReorderList({ course, onSaved }: { course: Course; onSaved: () => void }) {
+  const [items, setItems] = useState(
+    [
+      ...course.lessons.map((l) => ({ id: l.id, type: 'lesson', title: l.title })),
+      ...(course.quizzes?.map((q)=> ({ id: q.id, type: 'quiz', title: q.title })) || []),
+    ],
+  );
+  const onDragStart = (e: React.DragEvent<HTMLDivElement>, id: string) => {
+    e.dataTransfer.setData('text/plain', id);
+  };
+  const onDrop = (e: React.DragEvent<HTMLDivElement>, targetId: string) => {
+    const sourceId = e.dataTransfer.getData('text/plain');
+    const next = [...items];
+    const from = next.findIndex(i=>i.id===sourceId);
+    const to = next.findIndex(i=>i.id===targetId);
+    if (from<0 || to<0) return;
+    const [m] = next.splice(from,1);
+    next.splice(to,0,m);
+    setItems(next);
+  };
+  const onDragOver = (e: React.DragEvent<HTMLDivElement>) => e.preventDefault();
+  const save = async () => {
+    const lessonIds = items.filter(i=>i.type==='lesson').map(i=>i.id);
+    const quizIds = items.filter(i=>i.type==='quiz').map(i=>i.id);
+    if (lessonIds.length) {
+      await fetch('/api/lessons', { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ ids: lessonIds }) });
+    }
+    if (quizIds.length) {
+      await fetch('/api/quizzes', { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ ids: quizIds }) });
+    }
+    onSaved();
+  };
+  return (
+    <div>
+      <div className="space-y-2">
+        {items.map((it)=>(
+          <div key={it.id} draggable onDragStart={(e)=>onDragStart(e,it.id)} onDrop={(e)=>onDrop(e,it.id)} onDragOver={onDragOver} className="border rounded p-2 bg-slate-50">
+            {it.type.toUpperCase()}: {it.title}
+          </div>
+        ))}
+      </div>
+      <Button className="mt-3" onClick={save}>Save Order</Button>
     </div>
   );
 }

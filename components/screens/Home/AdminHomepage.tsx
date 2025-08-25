@@ -22,7 +22,7 @@ interface DashboardStats {
   recentOrders: Array<{ id: string; amount: number; status: string; createdAt: string }>;
 }
 
-export default function AdminDashboard() {
+export default function AdminHomepage() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedPeriod, setSelectedPeriod] = useState("7d");
@@ -98,14 +98,8 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen py-4 bg-slate-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="mb-12">
-          <h1 className="text-4xl font-bold text-slate-900 mb-4">Admin Dashboard</h1>
-          <p className="text-lg text-slate-600">Monitor your e-learning platform performance and growth metrics</p>
-        </div>
-
+    <div className="min-h-screen py-4 ">
+      <div className="max-w-7xl mx-auto ">
         {/* Period Selector */}
         <div className="mb-8">
           <div className="flex items-center space-x-2 bg-white rounded-lg p-1 shadow-sm">
@@ -200,9 +194,7 @@ export default function AdminDashboard() {
                   gaugePrimaryColor="#3b82f6"
                   gaugeSecondaryColor="#e5e7eb"
                 />
-                <div className="absolute text-center">
-                  <div className="text-3xl font-bold text-slate-900">{stats.leadConversionRate}%</div>
-                </div>
+             
               </div>
               <div className="text-center">
                 <p className="text-slate-600 mb-2">Leads converted to customers</p>
@@ -224,9 +216,7 @@ export default function AdminDashboard() {
                   gaugePrimaryColor="#10b981"
                   gaugeSecondaryColor="#e5e7eb"
                 />
-                <div className="absolute text-center">
-                  <div className="text-3xl font-bold text-slate-900">${stats.revenuePerVisitor}</div>
-                </div>
+               
               </div>
               <div className="text-center">
                 <p className="text-slate-600 mb-2">Average revenue per visitor</p>
@@ -297,50 +287,6 @@ export default function AdminDashboard() {
                 ))}
               </div>
             </div>
-          </div>
-        </div>
-
-        {/* Quick Actions */}
-        <div className="mt-12">
-          <div className="bg-white rounded-2xl p-8 shadow-lg">
-            <h3 className="text-xl font-bold text-slate-900 mb-6">Quick Actions</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <ShimmerButton className="h-12">
-                <Activity className="w-5 h-5 mr-2" />
-                Generate Report
-              </ShimmerButton>
-              <InteractiveHoverButton className="h-12 flex ">
-               <div className="flex items-center justify-center">
-                <Users className="w-5 h-5 mr-2" />
-                Manage Users
-               </div>
-              </InteractiveHoverButton>
-              <ShimmerButton className="h-12" background="#29cc34">
-                <BarChart3 className="w-5 h-5 mr-2" />
-                Export Data
-              </ShimmerButton>
-            </div>
-          </div>
-        </div>
-
-        {/* Dock Navigation */}
-        <div className="mt-12">
-          <div className="bg-white rounded-2xl p-8 shadow-lg">
-            <h3 className="text-xl font-bold text-slate-900 mb-6">Quick Navigation</h3>
-            <Dock className="mx-auto">
-              <div className="bg-blue-500 text-white rounded-full p-3">
-                <Home className="w-6 h-6" />
-              </div>
-              <div className="bg-green-500 text-white rounded-full p-3">
-                <BookOpen className="w-6 h-6" />
-              </div>
-              <div className="bg-purple-500 text-white rounded-full p-3">
-                <Users className="w-6 h-6" />
-              </div>
-              <div className="bg-yellow-500 text-white rounded-full p-3">
-                <BarChart3 className="w-6 h-6" />
-              </div>
-            </Dock>
           </div>
         </div>
       </div>

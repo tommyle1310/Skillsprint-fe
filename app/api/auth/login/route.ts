@@ -26,6 +26,7 @@ export async function POST(request: NextRequest) {
                 id
                 email
                 name
+                role
                 avatar
                 createdAt
               }
@@ -50,6 +51,7 @@ export async function POST(request: NextRequest) {
 
     if (data.data?.login) {
       const { access_token, user } = data.data.login;
+      console.log('check user.role', user)
       
       return NextResponse.json({
         success: true,
