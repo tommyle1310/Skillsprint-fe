@@ -1300,7 +1300,7 @@ const LandingPage = () => {
                           <Star className="w-5 h-5 text-yellow-500 fill-current" />
                           <Star className="w-5 h-5 text-yellow-500 fill-current" />
                           <span className="text-sm text-slate-600 ml-2">
-                            5.0 rating
+                            5.0
                           </span>
                         </div>
                         <ShimmerButton className="bg-blue-600 text-white hover:bg-blue-700 px-4 py-2 text-sm">

@@ -2,10 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { slug: string } }
+  ctx: { params: { slug: string } } | { params: Promise<{ slug: string }> }
 ) {
   try {
-    const { slug } = params;
+    // Next.js 15 route handlers may provide async params
+    const rawParams = (ctx as { params: { slug: string } | Promise<{ slug: string }> }).params;
+    const { slug } = rawParams instanceof Promise ? await rawParams : rawParams;
 
     if (!slug) {
       return NextResponse.json(
@@ -27,6 +29,7 @@ export async function GET(
               id
               title
               slug
+              purchaseCount
               avatar
               createdById
               description

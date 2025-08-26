@@ -54,9 +54,30 @@ interface Course {
   description: string;
   price: number;
   lessons: Lesson[];
+  purchaseCount: number;
   quizzes?: QuizItem[];
   createdAt: string;
   createdById?: string;
+}
+
+function useHasPurchased(userId?: string, courseId?: string) {
+  const [purchased, setPurchased] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(false);
+  useEffect(() => {
+    const load = async () => {
+      if (!userId || !courseId) return;
+      setLoading(true);
+      try {
+        const res = await fetch(`/api/orders?userId=${encodeURIComponent(userId)}&courseId=${encodeURIComponent(courseId)}`);
+        const data = await res.json();
+        if (res.ok && data.success) setPurchased(!!data.purchased);
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, [userId, courseId]);
+  return { purchased, loading };
 }
 
 export default function CourseDetailPage() {
@@ -68,6 +89,7 @@ export default function CourseDetailPage() {
   const [error, setError] = useState("");
 
   const { isAuthenticated, isAdmin, user } = useAuthStore();
+  const { purchased } = useHasPurchased(user?.id, course?.id);
 
   const refresh = async () => {
     try {
@@ -200,7 +222,7 @@ export default function CourseDetailPage() {
               <div className="text-center p-4 bg-slate-50 rounded-xl">
                 <Users className="w-8 h-8 text-purple-600 mx-auto mb-2" />
                 <div className="text-2xl font-bold text-slate-900">
-                  {Math.floor(Math.random() * 2000) + 100}
+                  {course.purchaseCount}
                 </div>
                 <div className="text-sm text-slate-600">Students</div>
               </div>
@@ -219,14 +241,9 @@ export default function CourseDetailPage() {
                 )}
               </div>
 
-              {/* <div className="flex space-x-4">
+              <div className="flex space-x-4">
                 {(() => {
-                  const isOwner =
-                    isAdmin ||
-                    (user?.id &&
-                      course.createdById &&
-                      user.id === course.createdById);
-                  console.log("cehck isowner", course);
+                  const isOwner = user?.id && course.createdById && user.id === course.createdById;
                   if (isOwner) {
                     return (
                       <Link href={`/courses/${course.slug}?edit=1`}>
@@ -239,14 +256,25 @@ export default function CourseDetailPage() {
                       </Link>
                     );
                   }
+                  if (purchased) {
+                    return (
+                      null
+                    );
+                  }
                   return (
-                    <ShimmerButton className="flex-1 h-12">
+                    <ShimmerButton
+                      className="flex-1 h-12"
+                      onClick={() => {
+                        if (!course) return;
+                        window.location.href = `/checkout/${course.slug}`;
+                      }}
+                    >
                       <Play className="w-5 h-5 mr-2" />
                       Enroll Now
                     </ShimmerButton>
                   );
                 })()}
-              </div> */}
+              </div>
             </div>
           </div>
         </div>

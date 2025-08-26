@@ -27,6 +27,7 @@ interface Course {
   price: number;
   image: string;
   lessons: number;
+  purchaseCount: number;
   duration: string;
   rating: number;
   students: number;
@@ -54,6 +55,7 @@ export default function CoursesPage() {
             const transformedCourses = data.courses.map((course: any) => ({
               id: course.id,
               title: course.title,
+              purchaseCount: course.purchaseCount,
               description: course.description,
               price: (course.price / 100).toFixed(2), // Convert from cents
               image: course.avatar || "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=400&h=300&fit=crop",
@@ -93,6 +95,7 @@ export default function CoursesPage() {
         image:
           "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=400&h=300&fit=crop",
         lessons: 25,
+        purchaseCount: 1247,
         duration: "15 hours",
         rating: 4.8,
         students: 1247,
@@ -107,6 +110,7 @@ export default function CoursesPage() {
         image:
           "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&h=300&fit=crop",
         lessons: 20,
+        purchaseCount: 892,
         duration: "12 hours",
         rating: 4.9,
         students: 892,
@@ -121,6 +125,7 @@ export default function CoursesPage() {
         image:
           "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=400&h=300&fit=crop",
         lessons: 18,
+        purchaseCount: 1563,
         duration: "10 hours",
         rating: 4.7,
         students: 1563,
@@ -134,6 +139,7 @@ export default function CoursesPage() {
         price: 69,
         image: "https://images.unsplash.com/500&h=300&fit=crop",
         lessons: 22,
+        purchaseCount: 734,
         duration: "14 hours",
         rating: 4.6,
         students: 734,
@@ -148,6 +154,7 @@ export default function CoursesPage() {
         image:
           "https://images.unsplash.com/photo-1526379095098-d400fd0bf935?w=400&h=300&fit=crop",
         lessons: 15,
+        purchaseCount: 2103,
         duration: "8 hours",
         rating: 4.5,
         students: 2103,
@@ -162,6 +169,7 @@ export default function CoursesPage() {
         image:
           "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&h=300&fit=crop",
         lessons: 30,
+        purchaseCount: 567,
         duration: "18 hours",
         rating: 4.8,
         students: 567,
@@ -224,6 +232,7 @@ export default function CoursesPage() {
       </div>
     );
   }
+  console.log('cehck course', courses?.[0])
 
   return (
     <div className="min-h-screen py-20">
@@ -333,7 +342,7 @@ export default function CoursesPage() {
                     </span>
                     <span className="flex items-center">
                       <Users className="w-4 h-4 mr-1" />
-                      {course.students.toLocaleString()}
+                      {course.purchaseCount}
                     </span>
                   </div>
 

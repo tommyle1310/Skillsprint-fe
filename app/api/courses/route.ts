@@ -18,6 +18,7 @@ export async function GET(request: NextRequest) {
               avatar
               description
               price
+              purchaseCount
               createdAt
               lessons {
                 id
