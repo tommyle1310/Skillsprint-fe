@@ -1,12 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { BarChart3, Users, TrendingUp, DollarSign, Eye, Mail, ShoppingCart, Activity, Home, BookOpen, ChevronDown } from "lucide-react";
+import { gql, useQuery } from "@apollo/client";
+import { TrendingUp, DollarSign, Eye, Mail, ShoppingCart, ChevronDown } from "lucide-react";
 import { BorderBeam } from "@/components/magicui/border-beam";
 import { AnimatedCircularProgressBar } from "@/components/magicui/animated-circular-progress-bar";
 import { ShimmerButton } from "@/components/magicui/shimmer-button";
 import { InteractiveHoverButton } from "@/components/magicui/interactive-hover-button";
-import { Dock } from "@/components/magicui/dock";
+//
 import { useAuthStore } from "@/lib/authStore";
 import { ForbiddenPage } from "@/app/ForbiddenPage";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
@@ -24,12 +25,48 @@ interface DashboardStats {
   revenuePerVisitor: number;
   recentLeads: Array<{ id: string; email: string; createdAt: string }>;
   recentOrders: Array<{ id: string; amount: number; status: string; createdAt: string }>;
+  churnRateToday?: number;
+  churnRateCompare?: number;
+  gaActiveUsers?: number;
+  gaSessions?: number;
+  gaBounceRate?: number;
+  todayUsers?: number;
+  todayPaidUsers?: number;
+  funnel?: {
+    leads: number;
+    users: number;
+    paidUsers: number;
+    leadToUserRate: number;
+    userToPaidRate: number;
+    overallRate: number;
+  }
 }
+
+const ADMIN_OVERVIEW_QUERY = gql`
+  query AdminOverview($period: AdminOverviewPeriodType!) {
+    adminOverview(period: $period) {
+      period
+      recentOrders { id amount status createdAt }
+      recentUsers { id email name image role createdAt }
+      today { orders revenue leads users paidUsers }
+      compare { orders revenue leads users paidUsers }
+      funnel { leads users paidUsers leadToUserRate userToPaidRate overallRate }
+      churnRateToday
+      churnRateCompare
+      totalTraffic
+      gaActiveUsers
+      gaSessions
+      gaBounceRate
+    }
+  }
+`;
+
+type InquiryRow = { id: string; subject: string; name: string; email: string; status: string; createdAt: string };
 
 function AdminInquiriesWidget() {
   const [page, setPage] = useState(1);
   const pageSize = 10;
-  const [rows, setRows] = useState<any[]>([]);
+  const [rows, setRows] = useState<InquiryRow[]>([]);
   const [total, setTotal] = useState(0);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
@@ -172,10 +209,48 @@ export default function AdminHomepage() {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedPeriod, setSelectedPeriod] = useState("7d");
   
-  const { isAuthenticated, isAdmin, loading, initialized } = useAuthStore();
+  const { isAuthenticated, isAdmin, loading: authLoading, initialized } = useAuthStore();
 
-  // Check if user is admin
-  if (!initialized || loading) {
+  const labelToEnum: Record<string, string> = {
+    "7d": "SEVEN_DAYS",
+    "30d": "THIRTY_DAYS",
+    "90d": "NINETY_DAYS",
+    "1y": "ONE_YEAR",
+  };
+
+  const { data, loading: queryLoading, refetch } = useQuery(ADMIN_OVERVIEW_QUERY, {
+    variables: { period: labelToEnum[selectedPeriod] },
+  });
+
+  // Load from GraphQL
+  useEffect(() => {
+    if (queryLoading) return;
+    if (!data?.adminOverview) return;
+    const ao = data.adminOverview;
+    const derived: DashboardStats = {
+      totalTraffic: ao.totalTraffic ?? 0,
+      totalLeads: ao.today.leads,
+      totalOrders: ao.today.orders,
+      totalRevenue: ao.today.revenue,
+      leadConversionRate: ao.funnel?.leadToUserRate ?? 0,
+      revenuePerVisitor: 0,
+      recentLeads: ao.recentUsers.map((u: { id: string; email: string; createdAt: string }) => ({ id: u.id, email: u.email, createdAt: u.createdAt })),
+      recentOrders: ao.recentOrders,
+      churnRateToday: ao.churnRateToday,
+      churnRateCompare: ao.churnRateCompare,
+      gaActiveUsers: ao.gaActiveUsers ?? undefined,
+      gaSessions: ao.gaSessions ?? undefined,
+      gaBounceRate: ao.gaBounceRate ?? undefined,
+      todayUsers: ao.today.users,
+      todayPaidUsers: ao.today.paidUsers,
+      funnel: ao.funnel,
+    };
+    setStats(derived);
+    setIsLoading(false);
+  }, [queryLoading, data]);
+
+  // Check if user is admin (after hooks to keep hooks order stable)
+  if (!initialized || authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <LoadingSpinner size="lg" />
@@ -186,35 +261,6 @@ export default function AdminHomepage() {
   if (!isAuthenticated || !isAdmin) {
     return <ForbiddenPage />;
   }
-
-  // Mock data - replace with actual API call
-  useEffect(() => {
-    const mockStats: DashboardStats = {
-      totalTraffic: 15420,
-      totalLeads: 1247,
-      totalOrders: 89,
-      totalRevenue: 8920,
-      leadConversionRate: 8.1,
-      revenuePerVisitor: 0.58,
-      recentLeads: [
-        { id: "1", email: "john.doe@example.com", createdAt: "2024-01-15T10:30:00Z" },
-        { id: "2", email: "sarah.smith@example.com", createdAt: "2024-01-15T09:15:00Z" },
-        { id: "3", email: "mike.johnson@example.com", createdAt: "2024-01-15T08:45:00Z" },
-        { id: "4", email: "emily.brown@example.com", createdAt: "2024-01-15T08:20:00Z" },
-        { id: "5", email: "david.wilson@example.com", createdAt: "2024-01-15T07:55:00Z" }
-      ],
-      recentOrders: [
-        { id: "1", amount: 99, status: "paid", createdAt: "2024-01-15T11:20:00Z" },
-        { id: "2", amount: 79, status: "paid", createdAt: "2024-01-15T10:45:00Z" },
-        { id: "3", amount: 89, status: "pending", createdAt: "2024-01-15T10:15:00Z" },
-        { id: "4", amount: 119, status: "paid", createdAt: "2024-01-15T09:30:00Z" },
-        { id: "5", amount: 69, status: "failed", createdAt: "2024-01-15T09:00:00Z" }
-      ]
-    };
-
-    setStats(mockStats);
-    setIsLoading(false);
-  }, []);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
@@ -266,7 +312,7 @@ export default function AdminHomepage() {
             {["7d", "30d", "90d", "1y"].map((period) => (
               <button
                 key={period}
-                onClick={() => setSelectedPeriod(period)}
+                onClick={() => { setSelectedPeriod(period); refetch({ period: labelToEnum[period] }); }}
                 className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
                   selectedPeriod === period
                     ? "bg-blue-600 text-white"
@@ -311,7 +357,7 @@ export default function AdminHomepage() {
             },
             {
               title: "Total Revenue",
-              value: `$${stats.totalRevenue.toLocaleString()}`,
+              value: `$${(stats.totalRevenue / 100).toFixed(2).toLocaleString()}`,
               icon: DollarSign,
               iconBg: "bg-yellow-100",
               iconColor: "text-yellow-600",
@@ -342,15 +388,15 @@ export default function AdminHomepage() {
         </div>
 
         {/* Conversion Metrics */}
-        <div className="grid grid-cols-1  lg:grid-cols-2 gap-6 mb-12">
+        <div className="grid grid-cols-1  lg:grid-cols-3 gap-6 mb-12">
           {/* Lead Conversion Rate */}
           <div className="relative rounded-2xl overflow-hidden">
             <BorderBeam className="rounded-2xl"/>
             <div className="bg-white rounded-2xl p-8 shadow-lg">
-              <h3 className="text-xl font-bold text-slate-900 mb-6">Lead Conversion Rate</h3>
+              <h3 className="text-xl font-bold text-slate-900 mb-6 text-center">Lead Conversion Rate</h3>
               <div className="flex items-center justify-center mb-6">
                 <AnimatedCircularProgressBar
-                  value={stats.leadConversionRate}
+                  value={stats.funnel?.leadToUserRate ?? stats.leadConversionRate}
                   gaugePrimaryColor="#3b82f6"
                   gaugeSecondaryColor="#e5e7eb"
                 />
@@ -359,47 +405,99 @@ export default function AdminHomepage() {
               <div className="text-center">
                 <p className="text-slate-600 mb-2">Leads converted to customers</p>
                 <p className="text-sm text-slate-500">
-                  {stats.totalLeads} leads → {Math.round(stats.totalLeads * stats.leadConversionRate / 100)} customers
+                  {stats.funnel?.leads ?? stats.totalLeads} leads → {stats.funnel?.users ?? Math.round(stats.totalLeads * (stats.leadConversionRate/100))} users
                 </p>
               </div>
             </div>
           </div>
 
-          {/* Revenue Per Visitor */}
+          {/* Conversion Funnel */}
           <div className="relative rounded-2xl overflow-hidden">
             <BorderBeam className="rounded-2xl"/>
             <div className="bg-white rounded-2xl p-8 shadow-lg">
-              <h3 className="text-xl font-bold text-slate-900 mb-6">Revenue Per Visitor</h3>
-              <div className="flex items-center justify-center mb-6">
-                <AnimatedCircularProgressBar
-                  value={Math.round(stats.revenuePerVisitor * 100)}
-                  gaugePrimaryColor="#10b981"
+              <h3 className="text-xl font-bold text-slate-900 mb-6 text-center">Conversion Stages</h3>
+              <div className="space-y-4">
+                <div>
+                  <div className="flex items-center justify-between mb-1 text-sm text-slate-600">
+                    <span>Leads</span>
+                    <span className="font-medium text-slate-900">{stats.funnel?.leads ?? stats.totalLeads}</span>
+                  </div>
+                  <div className="h-3 bg-slate-100 rounded">
+                    <div
+                      className="h-3 bg-blue-500 rounded"
+                      style={{ width: '100%' }}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <div className="flex items-center justify-between mb-1 text-sm text-slate-600">
+                    <span>Users</span>
+                    <span className="font-medium text-slate-900">{stats.funnel?.users ?? 0}</span>
+                  </div>
+                  <div className="h-3 bg-slate-100 rounded">
+                    <div
+                      className="h-3 bg-green-500 rounded"
+                      style={{ width: `${Math.max(0, Math.min(100, (stats.funnel && stats.funnel.leads > 0 ? (stats.funnel.users / stats.funnel.leads) * 100 : 0)))}%` }}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <div className="flex items-center justify-between mb-1 text-sm text-slate-600">
+                    <span>Paid</span>
+                    <span className="font-medium text-slate-900">{stats.funnel?.paidUsers ?? 0}</span>
+                  </div>
+                  <div className="h-3 bg-slate-100 rounded">
+                    <div
+                      className="h-3 bg-amber-500 rounded"
+                      style={{ width: `${Math.max(0, Math.min(100, (stats.funnel && stats.funnel.users > 0 ? (stats.funnel.paidUsers / stats.funnel.users) * 100 : 0)))}%` }}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {stats.funnel && (
+                <div className="grid grid-cols-2 gap-3 mt-6 text-center">
+                  <div className="rounded-lg bg-blue-50 py-2">
+                    <div className="text-xs text-slate-500">Lead → User</div>
+                    <div className="text-lg font-semibold text-blue-700">{stats.funnel.leadToUserRate.toFixed(1)}%</div>
+                  </div>
+                  <div className="rounded-lg bg-green-50 py-2">
+                    <div className="text-xs text-slate-500">User → Paid</div>
+                    <div className="text-lg font-semibold text-green-700">{stats.funnel.userToPaidRate.toFixed(1)}%</div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Churn Rate */}
+          <div className="relative rounded-2xl overflow-hidden">
+            <BorderBeam className="rounded-2xl"/>
+            <div className="bg-white rounded-2xl h-full p-8 shadow-lg">
+              <h3 className="text-xl font-bold text-slate-900 mb-6 text-center">Churn Rate</h3>
+              <AnimatedCircularProgressBar
+              className="mx-auto"
+                  value={stats.churnRateToday ?? stats.churnRateCompare ?? 0}
+                  gaugePrimaryColor="#f59e0b"
                   gaugeSecondaryColor="#e5e7eb"
                 />
-               
-              </div>
-              <div className="text-center">
-                <p className="text-slate-600 mb-2">Average revenue per visitor</p>
-                <p className="text-sm text-slate-500">
-                  ${stats.totalRevenue.toLocaleString()} ÷ {stats.totalTraffic.toLocaleString()} visitors
-                </p>
-              </div>
-            </div>
+                <p className="text-slate-600 text-center mt-4 mb-2">Amount of users who stopped using the platform</p>
+                            </div>
           </div>
         </div>
 
         {/* Recent Activity */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Recent Leads */}
+          {/* Recent Users */}
           <div className="relative rounded-2xl overflow-hidden">
             <BorderBeam className="rounded-2xl"/>
             <div className="bg-white rounded-2xl p-6 shadow-lg">
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-xl font-bold text-slate-900">Recent Leads</h3>
+                <h3 className="text-xl font-bold text-slate-900">Recent Users</h3>
                 <ShimmerButton>View All</ShimmerButton>
               </div>
               <div className="space-y-4">
-                {stats.recentLeads.map((lead) => (
+                {stats.recentLeads.slice(0, 5).map((lead) => (
                   <div key={lead.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
                     <div className="flex items-center space-x-3">
                       <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
@@ -418,22 +516,22 @@ export default function AdminHomepage() {
           </div>
 
           {/* Recent Orders */}
-          <div className="relative rounded-2xl overflow-hidden">
+          <div className="relative rounded-2xl flex-grow flex-1 h-full overflow-hidden">
             <BorderBeam className="rounded-2xl"/>
-            <div className="bg-white rounded-2xl p-6 shadow-lg">
+            <div className="bg-white h-full rounded-2xl p-6 shadow-lg">
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-xl font-bold text-slate-900">Recent Orders</h3>
                 <ShimmerButton>View All</ShimmerButton>
               </div>
               <div className="space-y-4">
-                {stats.recentOrders.map((order) => (
+                {stats.recentOrders.slice(0, 5).map((order) => (
                   <div key={order.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
                     <div className="flex items-center space-x-3">
                       <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
                         <ShoppingCart className="w-4 h-4 text-green-600" />
                       </div>
                       <div>
-                        <div className="font-medium text-slate-900">${order.amount}</div>
+                        <div className="font-medium text-slate-900">${(order.amount / 100).toFixed(2).toLocaleString()}</div>
                         <div className="text-sm text-slate-500">{formatDate(order.createdAt)}</div>
                       </div>
                     </div>
@@ -475,15 +573,15 @@ export default function AdminHomepage() {
               <h2 className="font-semibold mb-2">Today</h2>
               <div className="grid grid-cols-3 gap-4 text-center">
                 <div>
-                  <div className="text-2xl font-bold">--</div>
+                  <div className="text-2xl font-bold">{stats.totalLeads}</div>
                   <div className="text-xs text-slate-500">Leads</div>
                 </div>
                 <div>
-                  <div className="text-2xl font-bold">--</div>
+                  <div className="text-2xl font-bold">{stats.totalOrders}</div>
                   <div className="text-xs text-slate-500">Orders</div>
                 </div>
                 <div>
-                  <div className="text-2xl font-bold">--</div>
+                  <div className="text-2xl font-bold">${(stats.totalRevenue / 100).toFixed(2).toLocaleString()}</div>
                   <div className="text-xs text-slate-500">Revenue</div>
                 </div>
               </div>

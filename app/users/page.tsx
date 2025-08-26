@@ -45,6 +45,7 @@ export type ManagedUser = {
   name?: string;
   role: "USER" | "ADMIN" | "LEAD" | "TEACHER";
   avatar?: string | null;
+  lastLogin?: string | null;
 };
 
 const ALL_ROLES: ManagedUser["role"][] = ["USER", "LEAD", "TEACHER", "ADMIN"];
@@ -87,6 +88,20 @@ export const columns: ColumnDef<ManagedUser>[] = [
   {
     accessorKey: "name",
     header: "Name",
+  },
+  {
+    accessorKey: "lastLogin",
+    header: ({ column }) => (
+      <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
+        Last Login
+        <ArrowUpDown className="ml-2 h-4 w-4" />
+      </Button>
+    ),
+    cell: ({ row }) => (
+      <div className="text-xs text-slate-600">
+        {row.getValue("lastLogin") ? new Date(row.getValue("lastLogin") as string).toLocaleString() : "—"}
+      </div>
+    ),
   },
 ];
 

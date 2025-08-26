@@ -41,7 +41,7 @@ export default function LoginPage() {
         login(data.user, data.token);
 
         // Redirect to dashboard or courses page
-        router.push("/courses");
+        router.push("/");
       } else {
         setError(data.message || "Login failed");
       }
