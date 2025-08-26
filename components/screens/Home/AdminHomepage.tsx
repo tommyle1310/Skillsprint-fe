@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { BarChart3, Users, TrendingUp, DollarSign, Eye, Mail, ShoppingCart, Activity, Home, BookOpen } from "lucide-react";
+import { BarChart3, Users, TrendingUp, DollarSign, Eye, Mail, ShoppingCart, Activity, Home, BookOpen, ChevronDown } from "lucide-react";
 import { BorderBeam } from "@/components/magicui/border-beam";
 import { AnimatedCircularProgressBar } from "@/components/magicui/animated-circular-progress-bar";
 import { ShimmerButton } from "@/components/magicui/shimmer-button";
@@ -10,6 +10,10 @@ import { Dock } from "@/components/magicui/dock";
 import { useAuthStore } from "@/lib/authStore";
 import { ForbiddenPage } from "@/app/ForbiddenPage";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
+import { Button } from "@/components/ui/button";
+import { TableBody, Table, TableCell, TableHead, TableRow, TableHeader } from "@/components/ui/table";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import Link from "next/link";
 
 interface DashboardStats {
   totalTraffic: number;
@@ -20,6 +24,147 @@ interface DashboardStats {
   revenuePerVisitor: number;
   recentLeads: Array<{ id: string; email: string; createdAt: string }>;
   recentOrders: Array<{ id: string; amount: number; status: string; createdAt: string }>;
+}
+
+function AdminInquiriesWidget() {
+  const [page, setPage] = useState(1);
+  const pageSize = 10;
+  const [rows, setRows] = useState<any[]>([]);
+  const [total, setTotal] = useState(0);
+  const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const res = await fetch(
+        `/api/inquiries?page=${page}&pageSize=${pageSize}`
+      );
+      const data = await res.json();
+      if (!cancelled && data.success) {
+        setRows(data.inquiries);
+        setTotal(data.total);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [page]);
+
+  const setStatus = async (id: string, status: string) => {
+    try {
+      setUpdatingId(id);
+      const res = await fetch("/api/inquiries", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, status }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setRows((prev) =>
+          prev.map((r) =>
+            r.id === id ? { ...r, status: data.inquiry.status } : r
+          )
+        );
+      }
+    } finally {
+      setUpdatingId(null);
+    }
+  };
+
+  return (
+    <div className="relative rounded-2xl overflow-hidden">
+      <div className="bg-white rounded-2xl p-6 border">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="font-semibold">Inquiries</h2>
+          <div className="text-sm text-slate-500">
+            Page {page} of {totalPages}
+          </div>
+        </div>
+        <div className="overflow-hidden rounded-md border">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Subject</TableHead>
+                <TableHead>From</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {rows.map((q) => (
+                <TableRow key={q.id}>
+                  <TableCell className="font-medium">{q.subject}</TableCell>
+                  <TableCell>
+                    {q.name} • {q.email}
+                  </TableCell>
+                  <TableCell>{q.status}</TableCell>
+                  <TableCell className="text-right">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={updatingId === q.id}
+                        >
+                          Set status <ChevronDown className="ml-1 h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuLabel>Choose</DropdownMenuLabel>
+                        {["OPEN", "IN_PROGRESS", "RESOLVED", "CLOSED"].map(
+                          (s) => (
+                            <DropdownMenuItem
+                              key={s}
+                              onClick={() => setStatus(q.id, s)}
+                              disabled={q.status === s || updatingId === q.id}
+                            >
+                              {s}
+                            </DropdownMenuItem>
+                          )
+                        )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              ))}
+              {rows.length === 0 && (
+                <TableRow>
+                  <TableCell
+                    colSpan={4}
+                    className="h-24 text-center text-slate-500"
+                  >
+                    No inquiries yet.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
+        <div className="flex items-center justify-between mt-4">
+          <div className="text-sm text-slate-500">Total {total}</div>
+          <div className="space-x-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page <= 1 || updatingId !== null}
+            >
+              Previous
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              disabled={page >= totalPages || updatingId !== null}
+            >
+              Next
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export default function AdminHomepage() {
@@ -98,6 +243,21 @@ export default function AdminHomepage() {
   }
 
   return (
+    <div className="min-h-screen py-12 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="flex items-center justify-between mb-6">
+         <div className="flex flex-col">
+           <h1 className="text-4xl font-bold text-slate-900 mb-4">
+             Admin Dashboard
+           </h1>
+           <p className="text-lg text-slate-600">
+             Monitor your e-learning platform performance and growth
+             metrics
+           </p>
+         </div>
+         <Link href="/users">
+           <ShimmerButton>Manage Users</ShimmerButton>
+         </Link>
+       </div>
     <div className="min-h-screen py-4 ">
       <div className="max-w-7xl mx-auto ">
         {/* Period Selector */}
@@ -291,5 +451,52 @@ export default function AdminHomepage() {
         </div>
       </div>
     </div>
+      <div className="mt-4">           
+      <div className="grid lg:grid-cols-3 gap-6">
+        {/* Stats */}
+        <div className="lg:col-span-1 space-y-6">
+          <div className="relative rounded-2xl overflow-hidden">
+            <BorderBeam className="rounded-2xl" />
+            <div className="bg-white rounded-2xl p-6 border">
+              <h2 className="font-semibold mb-4">Quick Links</h2>
+              <div className="flex gap-3">
+                <Link href="/courses/new">
+                  <ShimmerButton>Create Course</ShimmerButton>
+                </Link>
+                <Link href="/courses">
+                  <ShimmerButton>All Courses</ShimmerButton>
+                </Link>
+              </div>
+            </div>
+          </div>
+          <div className="relative rounded-2xl overflow-hidden">
+            <BorderBeam className="rounded-2xl" />
+            <div className="bg-white rounded-2xl p-6 border">
+              <h2 className="font-semibold mb-2">Today</h2>
+              <div className="grid grid-cols-3 gap-4 text-center">
+                <div>
+                  <div className="text-2xl font-bold">--</div>
+                  <div className="text-xs text-slate-500">Leads</div>
+                </div>
+                <div>
+                  <div className="text-2xl font-bold">--</div>
+                  <div className="text-xs text-slate-500">Orders</div>
+                </div>
+                <div>
+                  <div className="text-2xl font-bold">--</div>
+                  <div className="text-xs text-slate-500">Revenue</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        {/* Inquiries Table */}
+        <div className="lg:col-span-2">
+          <AdminInquiriesWidget />
+        </div>
+      </div>
+    </div>
+    </div>
+
   );
 }
