@@ -2,7 +2,21 @@
 
 import { useState, useEffect } from "react";
 import { gql, useQuery } from "@apollo/client";
-import { TrendingUp, DollarSign, Eye, Mail, ShoppingCart, ChevronDown, MousePointer, Scroll, Users, Globe, Monitor, BarChart3, Clock } from "lucide-react";
+import {
+  TrendingUp,
+  DollarSign,
+  Eye,
+  Mail,
+  ShoppingCart,
+  ChevronDown,
+  MousePointer,
+  Scroll,
+  Users,
+  Globe,
+  Monitor,
+  BarChart3,
+  Clock,
+} from "lucide-react";
 import { BorderBeam } from "@/components/magicui/border-beam";
 import { AnimatedCircularProgressBar } from "@/components/magicui/animated-circular-progress-bar";
 import { ShimmerButton } from "@/components/magicui/shimmer-button";
@@ -12,8 +26,29 @@ import { useAuthStore } from "@/lib/authStore";
 import { ForbiddenPage } from "@/app/ForbiddenPage";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { Button } from "@/components/ui/button";
-import { TableBody, Table, TableCell, TableHead, TableRow, TableHeader } from "@/components/ui/table";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import {
+  TableBody,
+  Table,
+  TableCell,
+  TableHead,
+  TableRow,
+  TableHeader,
+} from "@/components/ui/table";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Bar,
+  BarChart,
+  ResponsiveContainer,
+  XAxis,
+  YAxis,
+  Tooltip,
+} from "recharts";
 import Link from "next/link";
 
 interface DashboardStats {
@@ -24,7 +59,12 @@ interface DashboardStats {
   leadConversionRate: number;
   revenuePerVisitor: number;
   recentLeads: Array<{ id: string; email: string; createdAt: string }>;
-  recentOrders: Array<{ id: string; amount: number; status: string; createdAt: string }>;
+  recentOrders: Array<{
+    id: string;
+    amount: number;
+    status: string;
+    createdAt: string;
+  }>;
   churnRateToday?: number;
   churnRateCompare?: number;
   gaActiveUsers?: number;
@@ -39,18 +79,49 @@ interface DashboardStats {
     leadToUserRate: number;
     userToPaidRate: number;
     overallRate: number;
-  }
+  };
 }
 
 const ADMIN_OVERVIEW_QUERY = gql`
   query AdminOverview($period: AdminOverviewPeriodType!) {
     adminOverview(period: $period) {
       period
-      recentOrders { id amount status createdAt }
-      recentUsers { id email name image role createdAt }
-      today { orders revenue leads users paidUsers }
-      compare { orders revenue leads users paidUsers }
-      funnel { leads users paidUsers leadToUserRate userToPaidRate overallRate }
+      recentOrders {
+        id
+        amount
+        status
+        createdAt
+      }
+      recentUsers {
+        id
+        email
+        name
+        image
+        role
+        createdAt
+      }
+      today {
+        orders
+        revenue
+        leads
+        users
+        paidUsers
+      }
+      compare {
+        orders
+        revenue
+        leads
+        users
+        paidUsers
+      }
+      funnel {
+        leads
+        users
+        paidUsers
+        leadToUserRate
+        userToPaidRate
+        overallRate
+      }
       churnRateToday
       churnRateCompare
       totalTraffic
@@ -121,7 +192,14 @@ const COMPREHENSIVE_ANALYTICS_QUERY = gql`
   }
 `;
 
-type InquiryRow = { id: string; subject: string; name: string; email: string; status: string; createdAt: string };
+type InquiryRow = {
+  id: string;
+  subject: string;
+  name: string;
+  email: string;
+  status: string;
+  createdAt: string;
+};
 
 function AdminInquiriesWidget() {
   const [page, setPage] = useState(1);
@@ -268,8 +346,13 @@ export default function AdminHomepage() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedPeriod, setSelectedPeriod] = useState("7d");
-  
-  const { isAuthenticated, isAdmin, loading: authLoading, initialized } = useAuthStore();
+
+  const {
+    isAuthenticated,
+    isAdmin,
+    loading: authLoading,
+    initialized,
+  } = useAuthStore();
 
   const labelToEnum: Record<string, string> = {
     "7d": "SEVEN_DAYS",
@@ -278,13 +361,20 @@ export default function AdminHomepage() {
     "1y": "ONE_YEAR",
   };
 
-  const { data, loading: queryLoading, refetch } = useQuery(ADMIN_OVERVIEW_QUERY, {
+  const {
+    data,
+    loading: queryLoading,
+    refetch,
+  } = useQuery(ADMIN_OVERVIEW_QUERY, {
     variables: { period: labelToEnum[selectedPeriod] },
   });
 
-  const { data: analyticsData, loading: analyticsLoading } = useQuery(COMPREHENSIVE_ANALYTICS_QUERY, {
-    variables: { days: 7 },
-  });
+  const { data: analyticsData, loading: analyticsLoading } = useQuery(
+    COMPREHENSIVE_ANALYTICS_QUERY,
+    {
+      variables: { days: 7 },
+    }
+  );
 
   // Load from GraphQL
   useEffect(() => {
@@ -298,7 +388,13 @@ export default function AdminHomepage() {
       totalRevenue: ao.today.revenue,
       leadConversionRate: ao.funnel?.leadToUserRate ?? 0,
       revenuePerVisitor: 0,
-      recentLeads: ao.recentUsers.map((u: { id: string; email: string; createdAt: string }) => ({ id: u.id, email: u.email, createdAt: u.createdAt })),
+      recentLeads: ao.recentUsers.map(
+        (u: { id: string; email: string; createdAt: string }) => ({
+          id: u.id,
+          email: u.email,
+          createdAt: u.createdAt,
+        })
+      ),
       recentOrders: ao.recentOrders,
       churnRateToday: ao.churnRateToday,
       churnRateCompare: ao.churnRateCompare,
@@ -331,16 +427,20 @@ export default function AdminHomepage() {
       month: "short",
       day: "numeric",
       hour: "2-digit",
-      minute: "2-digit"
+      minute: "2-digit",
     });
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "paid": return "text-green-600 bg-green-100";
-      case "pending": return "text-yellow-600 bg-yellow-100";
-      case "failed": return "text-red-600 bg-red-100";
-      default: return "text-slate-600 bg-slate-100";
+      case "paid":
+        return "text-green-600 bg-green-100";
+      case "pending":
+        return "text-yellow-600 bg-yellow-100";
+      case "failed":
+        return "text-red-600 bg-red-100";
+      default:
+        return "text-slate-600 bg-slate-100";
     }
   };
 
@@ -354,495 +454,723 @@ export default function AdminHomepage() {
 
   return (
     <div className="min-h-screen py-12 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div className="flex items-center justify-between mb-6">
-         <div className="flex flex-col">
-           <h1 className="text-4xl font-bold text-slate-900 mb-4">
-             Admin Dashboard
-           </h1>
-           <p className="text-lg text-slate-600">
-             Monitor your e-learning platform performance and growth
-             metrics
-           </p>
-         </div>
-         <Link href="/users">
-           <ShimmerButton>Manage Users</ShimmerButton>
-         </Link>
-       </div>
-    <div className="min-h-screen py-4 ">
-      <div className="max-w-7xl mx-auto ">
-        {/* Period Selector */}
-        <div className="mb-8">
-          <div className="flex items-center space-x-2 bg-white rounded-lg p-1 shadow-sm">
-            {["7d", "30d", "90d", "1y"].map((period) => (
-              <button
-                key={period}
-                onClick={() => { setSelectedPeriod(period); refetch({ period: labelToEnum[period] }); }}
-                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                  selectedPeriod === period
-                    ? "bg-blue-600 text-white"
-                    : "text-slate-600 hover:text-slate-900"
-                }`}
-              >
-                {period}
-              </button>
-            ))}
-          </div>
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-col">
+          <h1 className="text-4xl font-bold text-slate-900 mb-4">
+            Admin Dashboard
+          </h1>
+          <p className="text-lg text-slate-600">
+            Monitor your e-learning platform performance and growth metrics
+          </p>
         </div>
-
-        {/* Key Metrics */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-          {[
-            {
-              title: "Total Traffic",
-              value: stats.totalTraffic.toLocaleString(),
-              icon: Eye,
-              iconBg: "bg-blue-100",
-              iconColor: "text-blue-600",
-              growth: "+12.5%",
-              growthColor: "text-green-600"
-            },
-            {
-              title: "Total Leads",
-              value: stats.totalLeads.toLocaleString(),
-              icon: Mail,
-              iconBg: "bg-green-100",
-              iconColor: "text-green-600",
-              growth: "+8.2%",
-              growthColor: "text-green-600"
-            },
-            {
-              title: "Total Orders",
-              value: stats.totalOrders.toLocaleString(),
-              icon: ShoppingCart,
-              iconBg: "bg-purple-100",
-              iconColor: "text-purple-600",
-              growth: "+15.3%",
-              growthColor: "text-green-600"
-            },
-            {
-              title: "Total Revenue",
-              value: `$${(stats.totalRevenue / 100).toFixed(2).toLocaleString()}`,
-              icon: DollarSign,
-              iconBg: "bg-yellow-100",
-              iconColor: "text-yellow-600",
-              growth: "+22.1%",
-              growthColor: "text-green-600"
-            }
-          ].map((stat, index) => (
-            <div key={index} className="relative rounded-2xl overflow-hidden">
-              <BorderBeam className="rounded-2xl"/>
-              <div className="bg-white rounded-2xl p-6 shadow-lg">
-                <div className="flex items-center justify-between mb-4">
-                  <div className={`w-12 h-12 ${stat.iconBg} rounded-lg flex items-center justify-center`}>
-                    <stat.icon className={`w-6 h-6 ${stat.iconColor}`} />
-                  </div>
-                  <span className="text-sm text-slate-500">Last {selectedPeriod}</span>
-                </div>
-                <div className="text-3xl font-bold text-slate-900 mb-2">
-                  {stat.value}
-                </div>
-                <div className="text-slate-600">{stat.title}</div>
-                <div className={`flex items-center mt-2 ${stat.growthColor} text-sm`}>
-                  <TrendingUp className="w-4 h-4 mr-1" />
-                  {stat.growth}
-                </div>
-              </div>
+        <Link href="/users">
+          <ShimmerButton>Manage Users</ShimmerButton>
+        </Link>
+      </div>
+      <div className="min-h-screen py-4 ">
+        <div className="max-w-7xl mx-auto ">
+          {/* Period Selector */}
+          <div className="mb-8">
+            <div className="flex items-center space-x-2 bg-white rounded-lg p-1 shadow-sm">
+              {["7d", "30d", "90d", "1y"].map((period) => (
+                <button
+                  key={period}
+                  onClick={() => {
+                    setSelectedPeriod(period);
+                    refetch({ period: labelToEnum[period] });
+                  }}
+                  className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                    selectedPeriod === period
+                      ? "bg-blue-600 text-white"
+                      : "text-slate-600 hover:text-slate-900"
+                  }`}
+                >
+                  {period}
+                </button>
+              ))}
             </div>
-          ))}
-        </div>
-
-        {/* Google Analytics Metrics */}
-        {analyticsData?.comprehensiveAnalytics && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-            {[
-              {
-                title: "Active Users",
-                value: analyticsData.comprehensiveAnalytics.summary.activeUsers.toLocaleString(),
-                icon: Users,
-                iconBg: "bg-indigo-100",
-                iconColor: "text-indigo-600",
-                subtitle: "Last 7 days"
-              },
-              {
-                title: "Sessions",
-                value: analyticsData.comprehensiveAnalytics.summary.sessions.toLocaleString(),
-                icon: BarChart3,
-                iconBg: "bg-emerald-100",
-                iconColor: "text-emerald-600",
-                subtitle: "Last 7 days"
-              },
-              {
-                title: "Page Views",
-                value: analyticsData.comprehensiveAnalytics.summary.pageViews.toLocaleString(),
-                icon: Eye,
-                iconBg: "bg-cyan-100",
-                iconColor: "text-cyan-600",
-                subtitle: "Last 7 days"
-              },
-              {
-                title: "Avg Session Duration",
-                value: `${Math.round(analyticsData.comprehensiveAnalytics.summary.avgSessionDurationSec / 60)}m ${analyticsData.comprehensiveAnalytics.summary.avgSessionDurationSec % 60}s`,
-                icon: MousePointer,
-                iconBg: "bg-orange-100",
-                iconColor: "text-orange-600",
-                subtitle: "Last 7 days"
-              }
-            ].map((stat, index) => (
-              <div key={index} className="relative rounded-2xl overflow-hidden">
-                <BorderBeam className="rounded-2xl"/>
-                <div className="bg-white rounded-2xl p-6 shadow-lg">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className={`w-12 h-12 ${stat.iconBg} rounded-lg flex items-center justify-center`}>
-                      <stat.icon className={`w-6 h-6 ${stat.iconColor}`} />
-                    </div>
-                    <span className="text-sm text-slate-500">{stat.subtitle}</span>
-                  </div>
-                  <div className="text-3xl font-bold text-slate-900 mb-2">
-                    {stat.value}
-                  </div>
-                  <div className="text-slate-600">{stat.title}</div>
-                </div>
-              </div>
-            ))}
           </div>
-        )}
 
-        {/* CTA Performance */}
-        {analyticsData?.comprehensiveAnalytics && (
+          {/* Key Metrics */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
             {[
               {
-                title: "Register Clicks",
-                value: analyticsData.comprehensiveAnalytics.ctaClicks.register.toLocaleString(),
-                icon: MousePointer,
-                iconBg: "bg-green-100",
-                iconColor: "text-green-600",
-                ctr: analyticsData.comprehensiveAnalytics.overallCtr.toFixed(1) + "%"
-              },
-              {
-                title: "Login Clicks",
-                value: analyticsData.comprehensiveAnalytics.ctaClicks.login.toLocaleString(),
-                icon: MousePointer,
+                title: "Total Traffic",
+                value: stats.totalTraffic.toLocaleString(),
+                icon: Eye,
                 iconBg: "bg-blue-100",
                 iconColor: "text-blue-600",
-                ctr: analyticsData.comprehensiveAnalytics.overallCtr.toFixed(1) + "%"
+                growth: "+12.5%",
+                growthColor: "text-green-600",
               },
               {
-                title: "Courses Clicks",
-                value: analyticsData.comprehensiveAnalytics.ctaClicks.courses.toLocaleString(),
-                icon: MousePointer,
+                title: "Total Leads",
+                value: stats.totalLeads.toLocaleString(),
+                icon: Mail,
+                iconBg: "bg-green-100",
+                iconColor: "text-green-600",
+                growth: "+8.2%",
+                growthColor: "text-green-600",
+              },
+              {
+                title: "Total Orders",
+                value: stats.totalOrders.toLocaleString(),
+                icon: ShoppingCart,
                 iconBg: "bg-purple-100",
                 iconColor: "text-purple-600",
-                ctr: analyticsData.comprehensiveAnalytics.overallCtr.toFixed(1) + "%"
+                growth: "+15.3%",
+                growthColor: "text-green-600",
               },
               {
-                title: "Pricing Clicks",
-                value: analyticsData.comprehensiveAnalytics.ctaClicks.pricing.toLocaleString(),
-                icon: MousePointer,
-                iconBg: "bg-red-100",
-                iconColor: "text-red-600",
-                ctr: analyticsData.comprehensiveAnalytics.overallCtr.toFixed(1) + "%"
-              }
+                title: "Total Revenue",
+                value: `$${(stats.totalRevenue / 100)
+                  .toFixed(2)
+                  .toLocaleString()}`,
+                icon: DollarSign,
+                iconBg: "bg-yellow-100",
+                iconColor: "text-yellow-600",
+                growth: "+22.1%",
+                growthColor: "text-green-600",
+              },
             ].map((stat, index) => (
               <div key={index} className="relative rounded-2xl overflow-hidden">
-                <BorderBeam className="rounded-2xl"/>
+                <BorderBeam className="rounded-2xl" />
                 <div className="bg-white rounded-2xl p-6 shadow-lg">
                   <div className="flex items-center justify-between mb-4">
-                    <div className={`w-12 h-12 ${stat.iconBg} rounded-lg flex items-center justify-center`}>
+                    <div
+                      className={`w-12 h-12 ${stat.iconBg} rounded-lg flex items-center justify-center`}
+                    >
                       <stat.icon className={`w-6 h-6 ${stat.iconColor}`} />
                     </div>
-                    <span className="text-sm text-slate-500">CTR: {stat.ctr}</span>
+                    <span className="text-sm text-slate-500">
+                      Last {selectedPeriod}
+                    </span>
                   </div>
                   <div className="text-3xl font-bold text-slate-900 mb-2">
                     {stat.value}
                   </div>
                   <div className="text-slate-600">{stat.title}</div>
+                  <div
+                    className={`flex items-center mt-2 ${stat.growthColor} text-sm`}
+                  >
+                    <TrendingUp className="w-4 h-4 mr-1" />
+                    {stat.growth}
+                  </div>
                 </div>
               </div>
             ))}
           </div>
-        )}
 
-        {/* Conversion Metrics */}
-        <div className="grid grid-cols-1  lg:grid-cols-3 gap-6 mb-12">
-          {/* Lead Conversion Rate */}
-          <div className="relative rounded-2xl overflow-hidden">
-            <BorderBeam className="rounded-2xl"/>
-            <div className="bg-white rounded-2xl p-8 shadow-lg">
-              <h3 className="text-xl font-bold text-slate-900 mb-6 text-center">Lead Conversion Rate</h3>
-              <div className="flex items-center justify-center mb-6">
-                <AnimatedCircularProgressBar
-                  value={stats.funnel?.leadToUserRate ?? stats.leadConversionRate}
-                  gaugePrimaryColor="#3b82f6"
-                  gaugeSecondaryColor="#e5e7eb"
-                />
-             
-              </div>
-              <div className="text-center">
-                <p className="text-slate-600 mb-2">Leads converted to customers</p>
-                <p className="text-sm text-slate-500">
-                  {stats.funnel?.leads ?? stats.totalLeads} leads → {stats.funnel?.users ?? Math.round(stats.totalLeads * (stats.leadConversionRate/100))} users
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Conversion Funnel */}
-          <div className="relative rounded-2xl overflow-hidden">
-            <BorderBeam className="rounded-2xl"/>
-            <div className="bg-white rounded-2xl p-8 shadow-lg">
-              <h3 className="text-xl font-bold text-slate-900 mb-6 text-center">Conversion Stages</h3>
-              <div className="space-y-4">
-                <div>
-                  <div className="flex items-center justify-between mb-1 text-sm text-slate-600">
-                    <span>Leads</span>
-                    <span className="font-medium text-slate-900">{stats.funnel?.leads ?? stats.totalLeads}</span>
-                  </div>
-                  <div className="h-3 bg-slate-100 rounded">
-                    <div
-                      className="h-3 bg-blue-500 rounded"
-                      style={{ width: '100%' }}
-                    />
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 ">
+            {/* Google Analytics Metrics Table */}
+            {analyticsData?.comprehensiveAnalytics && (
+              <div className="mb-12 h-full flex-grow flex-1 lg:col-span-7">
+                <div className="relative rounded-2xl overflow-hidden bg-red-300">
+                  <BorderBeam className="rounded-2xl" />
+                  <div className="bg-white rounded-2xl p-6 shadow-lg h-full space-y-6">
+                    <h3 className="text-xl font-bold text-slate-900 ">
+                      Google Analytics Overview
+                    </h3>
+                    <div className="overflow-hidden rounded-md border">
+                      <Table className="h-full">
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Metric</TableHead>
+                            <TableHead>Value</TableHead>
+                            <TableHead>Description</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          <TableRow>
+                            <TableCell className="font-medium">
+                              Active Users
+                            </TableCell>
+                            <TableCell>
+                              {analyticsData.comprehensiveAnalytics.summary.activeUsers.toLocaleString()}
+                            </TableCell>
+                            <TableCell>
+                              Users who engaged with your site in the last 7
+                              days
+                            </TableCell>
+                          </TableRow>
+                          <TableRow>
+                            <TableCell className="font-medium">
+                              Sessions
+                            </TableCell>
+                            <TableCell>
+                              {analyticsData.comprehensiveAnalytics.summary.sessions.toLocaleString()}
+                            </TableCell>
+                            <TableCell>
+                              Total number of sessions in the last 7 days
+                            </TableCell>
+                          </TableRow>
+                          <TableRow>
+                            <TableCell className="font-medium">
+                              Page Views
+                            </TableCell>
+                            <TableCell>
+                              {analyticsData.comprehensiveAnalytics.summary.pageViews.toLocaleString()}
+                            </TableCell>
+                            <TableCell>
+                              Total number of page views in the last 7 days
+                            </TableCell>
+                          </TableRow>
+                          <TableRow>
+                            <TableCell className="font-medium">
+                              Avg Session Duration
+                            </TableCell>
+                            <TableCell>
+                              {(() => {
+                                const totalSeconds = Math.round(
+                                  analyticsData.comprehensiveAnalytics.summary
+                                    .avgSessionDurationSec
+                                );
+                                const minutes = Math.floor(totalSeconds / 60);
+                                const seconds = totalSeconds % 60;
+                                return `${minutes}m ${seconds}s`;
+                              })()}
+                            </TableCell>
+                            <TableCell>
+                              Average time users spend on your site per session
+                            </TableCell>
+                          </TableRow>
+                          <TableRow>
+                            <TableCell className="font-medium">
+                              User Engagement
+                            </TableCell>
+                            <TableCell>
+                              {(() => {
+                                const totalSeconds = Math.round(
+                                  analyticsData.comprehensiveAnalytics.summary
+                                    .engagementDurationSec
+                                );
+                                const minutes = Math.floor(totalSeconds / 60);
+                                const seconds = totalSeconds % 60;
+                                return `${minutes}m ${seconds}s`;
+                              })()}
+                            </TableCell>
+                            <TableCell>
+                              Total time users spent engaged with your site
+                            </TableCell>
+                          </TableRow>
+                          <TableRow>
+                            <TableCell className="font-medium">
+                              Bounce Rate
+                            </TableCell>
+                            <TableCell>
+                              {analyticsData.comprehensiveAnalytics.summary.bounceRate.toFixed(
+                                1
+                              )}
+                              %
+                            </TableCell>
+                            <TableCell>
+                              Percentage of single-page sessions
+                            </TableCell>
+                          </TableRow>
+                          <TableRow>
+                            <TableCell className="font-medium">
+                              New Users
+                            </TableCell>
+                            <TableCell>
+                              {analyticsData.comprehensiveAnalytics.newReturning.newUsers.toLocaleString()}
+                            </TableCell>
+                            <TableCell>
+                              First-time visitors to your site
+                            </TableCell>
+                          </TableRow>
+                          <TableRow>
+                            <TableCell className="font-medium">
+                              Returning Users
+                            </TableCell>
+                            <TableCell>
+                              {analyticsData.comprehensiveAnalytics.newReturning.returningUsers.toLocaleString()}
+                            </TableCell>
+                            <TableCell>
+                              Users who have visited your site before
+                            </TableCell>
+                          </TableRow>
+                          <TableRow>
+                            <TableCell className="font-medium">
+                              Form Submissions
+                            </TableCell>
+                            <TableCell>
+                              {analyticsData.comprehensiveAnalytics.formSubmissions.toLocaleString()}
+                            </TableCell>
+                            <TableCell>
+                              Total number of form submissions
+                            </TableCell>
+                          </TableRow>
+                          <TableRow>
+                            <TableCell className="font-medium">
+                              Hover Events
+                            </TableCell>
+                            <TableCell>
+                              {analyticsData.comprehensiveAnalytics.hoverEvents.toLocaleString()}
+                            </TableCell>
+                            <TableCell>
+                              Total number of hover interactions
+                            </TableCell>
+                          </TableRow>
+                        </TableBody>
+                      </Table>
+                    </div>
                   </div>
                 </div>
-                <div>
-                  <div className="flex items-center justify-between mb-1 text-sm text-slate-600">
-                    <span>Users</span>
-                    <span className="font-medium text-slate-900">{stats.funnel?.users ?? 0}</span>
-                  </div>
-                  <div className="h-3 bg-slate-100 rounded">
-                    <div
-                      className="h-3 bg-green-500 rounded"
-                      style={{ width: `${Math.max(0, Math.min(100, (stats.funnel && stats.funnel.leads > 0 ? (stats.funnel.users / stats.funnel.leads) * 100 : 0)))}%` }}
-                    />
-                  </div>
-                </div>
-                <div>
-                  <div className="flex items-center justify-between mb-1 text-sm text-slate-600">
-                    <span>Paid</span>
-                    <span className="font-medium text-slate-900">{stats.funnel?.paidUsers ?? 0}</span>
-                  </div>
-                  <div className="h-3 bg-slate-100 rounded">
-                    <div
-                      className="h-3 bg-amber-500 rounded"
-                      style={{ width: `${Math.max(0, Math.min(100, (stats.funnel && stats.funnel.users > 0 ? (stats.funnel.paidUsers / stats.funnel.users) * 100 : 0)))}%` }}
-                    />
-                  </div>
-                </div>
               </div>
-
-              {stats.funnel && (
-                <div className="grid grid-cols-2 gap-3 mt-6 text-center">
-                  <div className="rounded-lg bg-blue-50 py-2">
-                    <div className="text-xs text-slate-500">Lead → User</div>
-                    <div className="text-lg font-semibold text-blue-700">{stats.funnel.leadToUserRate.toFixed(1)}%</div>
+            )}
+            <div className="lg:col-span-5 flex flex-col gap-6">
+              {/* CTA Performance Chart */}
+              {analyticsData?.comprehensiveAnalytics && (
+                <div className="  flex-grow flex-1 ">
+                  <div className="relative rounded-2xl overflow-hidden  ">
+                    <BorderBeam className="rounded-2xl" />
+                    <div className="bg-white rounded-2xl p-6 shadow-lg h-full">
+                      <div className="">
+                        <h3 className="text-xl font-bold text-slate-900 mb-2">
+                          CTA Performance
+                        </h3>
+                        <p className="text-slate-500 text-sm">Last 7 days</p>
+                      </div>
+                      <div className="h-48">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <BarChart
+                              barGap={20}
+                  barCategoryGap={20}
+                  
+                            data={[
+                              {
+                                name: "Register",
+                                clicks:
+                                  analyticsData.comprehensiveAnalytics.ctaClicks
+                                    .register,
+                              },
+                              {
+                                name: "Login",
+                                clicks:
+                                  analyticsData.comprehensiveAnalytics.ctaClicks
+                                    .login,
+                              },
+                              {
+                                name: "Courses",
+                                clicks:
+                                  analyticsData.comprehensiveAnalytics.ctaClicks
+                                    .courses,
+                              },
+                              {
+                                name: "Pricing",
+                                clicks:
+                                  analyticsData.comprehensiveAnalytics.ctaClicks
+                                    .pricing,
+                              },
+                            ]}
+                            layout="vertical"
+                            margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                          >
+                            <XAxis type="number" hide />
+                            <YAxis
+                              dataKey="name"
+                              type="category"
+                              tickLine={false}
+                              tickMargin={10}
+                              axisLine={false}
+                              width={80}
+                            />
+                            <Tooltip
+                              formatter={(value: any) => [
+                                value.toLocaleString(),
+                                "Clicks",
+                              ]}
+                              labelFormatter={(label) => `${label} CTA`}
+                            />
+                            <Bar dataKey="clicks" barSize={20} fill="#3b82f6" radius={5} />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </div>
+                      <div className="mt-4 text-center">
+                        <p className="text-sm text-slate-500">
+                          Overall CTR:{" "}
+                          {analyticsData.comprehensiveAnalytics.overallCtr.toFixed(
+                            1
+                          )}
+                          %
+                        </p>
+                      </div>
+                    </div>
                   </div>
-                  <div className="rounded-lg bg-green-50 py-2">
-                    <div className="text-xs text-slate-500">User → Paid</div>
-                    <div className="text-lg font-semibold text-green-700">{stats.funnel.userToPaidRate.toFixed(1)}%</div>
+                </div>
+              )}
+              {/* Scroll Depth Analysis */}
+              {analyticsData?.comprehensiveAnalytics && (
+                <div className="mb-12">
+                  <div className="relative rounded-2xl overflow-hidden">
+                    <BorderBeam className="rounded-2xl" />
+                    <div className="bg-white rounded-2xl p-6 shadow-lg">
+                      <h3 className="text-xl font-bold text-slate-900 mb-6">
+                        Scroll Depth Analysis
+                      </h3>
+                      <div className="space-y-4">
+                        {[
+                          {
+                            label: "25%",
+                            value:
+                              analyticsData.comprehensiveAnalytics.scrollBuckets
+                                .s25,
+                            color: "bg-red-500",
+                          },
+                          {
+                            label: "50%",
+                            value:
+                              analyticsData.comprehensiveAnalytics.scrollBuckets
+                                .s50,
+                            color: "bg-orange-500",
+                          },
+                          {
+                            label: "75%",
+                            value:
+                              analyticsData.comprehensiveAnalytics.scrollBuckets
+                                .s75,
+                            color: "bg-yellow-500",
+                          },
+                          {
+                            label: "90%",
+                            value:
+                              analyticsData.comprehensiveAnalytics.scrollBuckets
+                                .s90,
+                            color: "bg-green-500",
+                          },
+                          {
+                            label: "100%",
+                            value:
+                              analyticsData.comprehensiveAnalytics.scrollBuckets
+                                .s100,
+                            color: "bg-blue-500",
+                          },
+                        ].map((item, index) => (
+                          <div key={index}>
+                            <div className="flex items-center justify-between mb-1 text-sm text-slate-600">
+                              <span>{item.label} Scroll</span>
+                              <span className="font-medium text-slate-900">
+                                {item.value.toLocaleString()}
+                              </span>
+                            </div>
+                            <div className="h-2 bg-slate-100 rounded">
+                              <div
+                                className={`h-2 ${item.color} rounded`}
+                                style={{
+                                  width: `${Math.min(
+                                    100,
+                                    (item.value /
+                                      Math.max(
+                                        1,
+                                        analyticsData.comprehensiveAnalytics
+                                          .scrollBuckets.s25
+                                      )) *
+                                      100
+                                  )}%`,
+                                }}
+                              />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="mt-4 text-center">
+                        <p className="text-sm text-slate-500">
+                          Average Scroll:{" "}
+                          {analyticsData.comprehensiveAnalytics.averageScrollPercentage.toFixed(
+                            1
+                          )}
+                          %
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}
             </div>
           </div>
 
-          {/* Churn Rate */}
-          <div className="relative rounded-2xl overflow-hidden">
-            <BorderBeam className="rounded-2xl"/>
-            <div className="bg-white rounded-2xl h-full p-8 shadow-lg">
-              <h3 className="text-xl font-bold text-slate-900 mb-6 text-center">Churn Rate</h3>
-              <AnimatedCircularProgressBar
-              className="mx-auto"
+          {/* Conversion Metrics */}
+          <div className="grid grid-cols-1  lg:grid-cols-3 gap-6 mb-12">
+            {/* Lead Conversion Rate */}
+            <div className="relative rounded-2xl overflow-hidden">
+              <BorderBeam className="rounded-2xl" />
+              <div className="bg-white rounded-2xl p-8 shadow-lg">
+                <h3 className="text-xl font-bold text-slate-900 mb-6 text-center">
+                  Lead Conversion Rate
+                </h3>
+                <div className="flex items-center justify-center mb-6">
+                  <AnimatedCircularProgressBar
+                    value={
+                      stats.funnel?.leadToUserRate ?? stats.leadConversionRate
+                    }
+                    gaugePrimaryColor="#3b82f6"
+                    gaugeSecondaryColor="#e5e7eb"
+                  />
+                </div>
+                <div className="text-center">
+                  <p className="text-slate-600 mb-2">
+                    Leads converted to customers
+                  </p>
+                  <p className="text-sm text-slate-500">
+                    {stats.funnel?.leads ?? stats.totalLeads} leads →{" "}
+                    {stats.funnel?.users ??
+                      Math.round(
+                        stats.totalLeads * (stats.leadConversionRate / 100)
+                      )}{" "}
+                    users
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Conversion Funnel */}
+            <div className="relative rounded-2xl overflow-hidden">
+              <BorderBeam className="rounded-2xl" />
+              <div className="bg-white rounded-2xl p-8 shadow-lg">
+                <h3 className="text-xl font-bold text-slate-900 mb-6 text-center">
+                  Conversion Stages
+                </h3>
+                <div className="space-y-4">
+                  <div>
+                    <div className="flex items-center justify-between mb-1 text-sm text-slate-600">
+                      <span>Leads</span>
+                      <span className="font-medium text-slate-900">
+                        {stats.funnel?.leads ?? stats.totalLeads}
+                      </span>
+                    </div>
+                    <div className="h-3 bg-slate-100 rounded">
+                      <div
+                        className="h-3 bg-blue-500 rounded"
+                        style={{ width: "100%" }}
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <div className="flex items-center justify-between mb-1 text-sm text-slate-600">
+                      <span>Users</span>
+                      <span className="font-medium text-slate-900">
+                        {stats.funnel?.users ?? 0}
+                      </span>
+                    </div>
+                    <div className="h-3 bg-slate-100 rounded">
+                      <div
+                        className="h-3 bg-green-500 rounded"
+                        style={{
+                          width: `${Math.max(
+                            0,
+                            Math.min(
+                              100,
+                              stats.funnel && stats.funnel.leads > 0
+                                ? (stats.funnel.users / stats.funnel.leads) *
+                                    100
+                                : 0
+                            )
+                          )}%`,
+                        }}
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <div className="flex items-center justify-between mb-1 text-sm text-slate-600">
+                      <span>Paid</span>
+                      <span className="font-medium text-slate-900">
+                        {stats.funnel?.paidUsers ?? 0}
+                      </span>
+                    </div>
+                    <div className="h-3 bg-slate-100 rounded">
+                      <div
+                        className="h-3 bg-amber-500 rounded"
+                        style={{
+                          width: `${Math.max(
+                            0,
+                            Math.min(
+                              100,
+                              stats.funnel && stats.funnel.users > 0
+                                ? (stats.funnel.paidUsers /
+                                    stats.funnel.users) *
+                                    100
+                                : 0
+                            )
+                          )}%`,
+                        }}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {stats.funnel && (
+                  <div className="grid grid-cols-2 gap-3 mt-6 text-center">
+                    <div className="rounded-lg bg-blue-50 py-2">
+                      <div className="text-xs text-slate-500">Lead → User</div>
+                      <div className="text-lg font-semibold text-blue-700">
+                        {stats.funnel.leadToUserRate.toFixed(1)}%
+                      </div>
+                    </div>
+                    <div className="rounded-lg bg-green-50 py-2">
+                      <div className="text-xs text-slate-500">User → Paid</div>
+                      <div className="text-lg font-semibold text-green-700">
+                        {stats.funnel.userToPaidRate.toFixed(1)}%
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Churn Rate */}
+            <div className="relative rounded-2xl overflow-hidden">
+              <BorderBeam className="rounded-2xl" />
+              <div className="bg-white rounded-2xl h-full p-8 shadow-lg">
+                <h3 className="text-xl font-bold text-slate-900 mb-6 text-center">
+                  Churn Rate
+                </h3>
+                <AnimatedCircularProgressBar
+                  className="mx-auto"
                   value={stats.churnRateToday ?? stats.churnRateCompare ?? 0}
                   gaugePrimaryColor="#f59e0b"
                   gaugeSecondaryColor="#e5e7eb"
                 />
-                <p className="text-slate-600 text-center mt-4 mb-2">Amount of users who stopped using the platform</p>
-                            </div>
+                <p className="text-slate-600 text-center mt-4 mb-2">
+                  Amount of users who stopped using the platform
+                </p>
+              </div>
+            </div>
           </div>
-        </div>
 
-        {/* Scroll Depth & Engagement */}
-        {analyticsData?.comprehensiveAnalytics && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-12">
-            {/* Scroll Depth */}
+          {/* Recent Activity */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Recent Users */}
             <div className="relative rounded-2xl overflow-hidden">
-              <BorderBeam className="rounded-2xl"/>
+              <BorderBeam className="rounded-2xl" />
               <div className="bg-white rounded-2xl p-6 shadow-lg">
-                <h3 className="text-xl font-bold text-slate-900 mb-6">Scroll Depth Analysis</h3>
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-xl font-bold text-slate-900">
+                    Recent Users
+                  </h3>
+                  <ShimmerButton>View All</ShimmerButton>
+                </div>
                 <div className="space-y-4">
-                  {[
-                    { label: "25%", value: analyticsData.comprehensiveAnalytics.scrollBuckets.s25, color: "bg-red-500" },
-                    { label: "50%", value: analyticsData.comprehensiveAnalytics.scrollBuckets.s50, color: "bg-orange-500" },
-                    { label: "75%", value: analyticsData.comprehensiveAnalytics.scrollBuckets.s75, color: "bg-yellow-500" },
-                    { label: "90%", value: analyticsData.comprehensiveAnalytics.scrollBuckets.s90, color: "bg-green-500" },
-                    { label: "100%", value: analyticsData.comprehensiveAnalytics.scrollBuckets.s100, color: "bg-blue-500" }
-                  ].map((item, index) => (
-                    <div key={index}>
-                      <div className="flex items-center justify-between mb-1 text-sm text-slate-600">
-                        <span>{item.label} Scroll</span>
-                        <span className="font-medium text-slate-900">{item.value.toLocaleString()}</span>
+                  {stats.recentLeads.slice(0, 5).map((lead) => (
+                    <div
+                      key={lead.id}
+                      className="flex items-center justify-between p-3 bg-slate-50 rounded-lg"
+                    >
+                      <div className="flex items-center space-x-3">
+                        <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                          <Mail className="w-4 h-4 text-blue-600" />
+                        </div>
+                        <div>
+                          <div className="font-medium text-slate-900">
+                            {lead.email}
+                          </div>
+                          <div className="text-sm text-slate-500">
+                            {formatDate(lead.createdAt)}
+                          </div>
+                        </div>
                       </div>
-                      <div className="h-2 bg-slate-100 rounded">
-                        <div
-                          className={`h-2 ${item.color} rounded`}
-                          style={{ width: `${Math.min(100, (item.value / Math.max(1, analyticsData.comprehensiveAnalytics.scrollBuckets.s25)) * 100)}%` }}
-                        />
+                      <InteractiveHoverButton>Contact</InteractiveHoverButton>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Recent Orders */}
+            <div className="relative rounded-2xl flex-grow flex-1 h-full overflow-hidden">
+              <BorderBeam className="rounded-2xl" />
+              <div className="bg-white h-full rounded-2xl p-6 shadow-lg">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-xl font-bold text-slate-900">
+                    Recent Orders
+                  </h3>
+                  <ShimmerButton>View All</ShimmerButton>
+                </div>
+                <div className="space-y-4">
+                  {stats.recentOrders.slice(0, 5).map((order) => (
+                    <div
+                      key={order.id}
+                      className="flex items-center justify-between p-3 bg-slate-50 rounded-lg"
+                    >
+                      <div className="flex items-center space-x-3">
+                        <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                          <ShoppingCart className="w-4 h-4 text-green-600" />
+                        </div>
+                        <div>
+                          <div className="font-medium text-slate-900">
+                            ${(order.amount / 100).toFixed(2).toLocaleString()}
+                          </div>
+                          <div className="text-sm text-slate-500">
+                            {formatDate(order.createdAt)}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <span
+                          className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(
+                            order.status
+                          )}`}
+                        >
+                          {order.status}
+                        </span>
+                        <InteractiveHoverButton>View</InteractiveHoverButton>
                       </div>
                     </div>
                   ))}
                 </div>
-                <div className="mt-4 text-center">
-                  <p className="text-sm text-slate-500">Average Scroll: {analyticsData.comprehensiveAnalytics.averageScrollPercentage.toFixed(1)}%</p>
-                </div>
               </div>
             </div>
-
-            {/* User Engagement */}
+          </div>
+        </div>
+      </div>
+      <div className="mt-4">
+        <div className="grid lg:grid-cols-3 gap-6">
+          {/* Stats */}
+          <div className="lg:col-span-1 space-y-6">
             <div className="relative rounded-2xl overflow-hidden">
-              <BorderBeam className="rounded-2xl"/>
-              <div className="bg-white rounded-2xl p-6 shadow-lg">
-                <h3 className="text-xl font-bold text-slate-900 mb-6">User Engagement</h3>
-                <div className="space-y-6">
-                  <div className="text-center">
-                    <div className="text-3xl font-bold text-slate-900 mb-2">
-                      {analyticsData.comprehensiveAnalytics.newReturning.newUsers.toLocaleString()}
-                    </div>
-                    <div className="text-slate-600">New Users</div>
+              <BorderBeam className="rounded-2xl" />
+              <div className="bg-white rounded-2xl p-6 border">
+                <h2 className="font-semibold mb-4">Quick Links</h2>
+                <div className="flex gap-3">
+                  <Link href="/courses/new">
+                    <ShimmerButton>Create Course</ShimmerButton>
+                  </Link>
+                  <Link href="/courses">
+                    <ShimmerButton>All Courses</ShimmerButton>
+                  </Link>
+                </div>
+              </div>
+            </div>
+            <div className="relative rounded-2xl overflow-hidden">
+              <BorderBeam className="rounded-2xl" />
+              <div className="bg-white rounded-2xl p-6 border">
+                <h2 className="font-semibold mb-2">Today</h2>
+                <div className="grid grid-cols-3 gap-4 text-center">
+                  <div>
+                    <div className="text-2xl font-bold">{stats.totalLeads}</div>
+                    <div className="text-xs text-slate-500">Leads</div>
                   </div>
-                  <div className="text-center">
-                    <div className="text-3xl font-bold text-slate-900 mb-2">
-                      {analyticsData.comprehensiveAnalytics.newReturning.returningUsers.toLocaleString()}
+                  <div>
+                    <div className="text-2xl font-bold">
+                      {stats.totalOrders}
                     </div>
-                    <div className="text-slate-600">Returning Users</div>
+                    <div className="text-xs text-slate-500">Orders</div>
                   </div>
-                  <div className="text-center">
-                    <div className="text-3xl font-bold text-slate-900 mb-2">
-                      {analyticsData.comprehensiveAnalytics.formSubmissions.toLocaleString()}
+                  <div>
+                    <div className="text-2xl font-bold">
+                      ${(stats.totalRevenue / 100).toFixed(2).toLocaleString()}
                     </div>
-                    <div className="text-slate-600">Form Submissions</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-3xl font-bold text-slate-900 mb-2">
-                      {analyticsData.comprehensiveAnalytics.hoverEvents.toLocaleString()}
-                    </div>
-                    <div className="text-slate-600">Hover Events</div>
+                    <div className="text-xs text-slate-500">Revenue</div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-        )}
-
-        {/* Recent Activity */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Recent Users */}
-          <div className="relative rounded-2xl overflow-hidden">
-            <BorderBeam className="rounded-2xl"/>
-            <div className="bg-white rounded-2xl p-6 shadow-lg">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-xl font-bold text-slate-900">Recent Users</h3>
-                <ShimmerButton>View All</ShimmerButton>
-              </div>
-              <div className="space-y-4">
-                {stats.recentLeads.slice(0, 5).map((lead) => (
-                  <div key={lead.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                        <Mail className="w-4 h-4 text-blue-600" />
-                      </div>
-                      <div>
-                        <div className="font-medium text-slate-900">{lead.email}</div>
-                        <div className="text-sm text-slate-500">{formatDate(lead.createdAt)}</div>
-                      </div>
-                    </div>
-                    <InteractiveHoverButton>Contact</InteractiveHoverButton>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Recent Orders */}
-          <div className="relative rounded-2xl flex-grow flex-1 h-full overflow-hidden">
-            <BorderBeam className="rounded-2xl"/>
-            <div className="bg-white h-full rounded-2xl p-6 shadow-lg">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-xl font-bold text-slate-900">Recent Orders</h3>
-                <ShimmerButton>View All</ShimmerButton>
-              </div>
-              <div className="space-y-4">
-                {stats.recentOrders.slice(0, 5).map((order) => (
-                  <div key={order.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                        <ShoppingCart className="w-4 h-4 text-green-600" />
-                      </div>
-                      <div>
-                        <div className="font-medium text-slate-900">${(order.amount / 100).toFixed(2).toLocaleString()}</div>
-                        <div className="text-sm text-slate-500">{formatDate(order.createdAt)}</div>
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
-                        {order.status}
-                      </span>
-                      <InteractiveHoverButton>View</InteractiveHoverButton>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+          {/* Inquiries Table */}
+          <div className="lg:col-span-2">
+            <AdminInquiriesWidget />
           </div>
         </div>
       </div>
     </div>
-      <div className="mt-4">           
-      <div className="grid lg:grid-cols-3 gap-6">
-        {/* Stats */}
-        <div className="lg:col-span-1 space-y-6">
-          <div className="relative rounded-2xl overflow-hidden">
-            <BorderBeam className="rounded-2xl" />
-            <div className="bg-white rounded-2xl p-6 border">
-              <h2 className="font-semibold mb-4">Quick Links</h2>
-              <div className="flex gap-3">
-                <Link href="/courses/new">
-                  <ShimmerButton>Create Course</ShimmerButton>
-                </Link>
-                <Link href="/courses">
-                  <ShimmerButton>All Courses</ShimmerButton>
-                </Link>
-              </div>
-            </div>
-          </div>
-          <div className="relative rounded-2xl overflow-hidden">
-            <BorderBeam className="rounded-2xl" />
-            <div className="bg-white rounded-2xl p-6 border">
-              <h2 className="font-semibold mb-2">Today</h2>
-              <div className="grid grid-cols-3 gap-4 text-center">
-                <div>
-                  <div className="text-2xl font-bold">{stats.totalLeads}</div>
-                  <div className="text-xs text-slate-500">Leads</div>
-                </div>
-                <div>
-                  <div className="text-2xl font-bold">{stats.totalOrders}</div>
-                  <div className="text-xs text-slate-500">Orders</div>
-                </div>
-                <div>
-                  <div className="text-2xl font-bold">${(stats.totalRevenue / 100).toFixed(2).toLocaleString()}</div>
-                  <div className="text-xs text-slate-500">Revenue</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        {/* Inquiries Table */}
-        <div className="lg:col-span-2">
-          <AdminInquiriesWidget />
-        </div>
-      </div>
-    </div>
-    </div>
-
   );
 }
