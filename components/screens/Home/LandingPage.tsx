@@ -11,11 +11,27 @@ import { ScrollProgress } from "@/components/magicui/scroll-progress";
 import { ShimmerButton } from "@/components/magicui/shimmer-button";
 import { Badge } from "@/components/ui/badge";
 import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   HoverCard,
   HoverCardContent,
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
 import { useAuthStore } from "@/lib/authStore";
+import { gtagEvent } from "@/lib/ga";
+import { event } from "@/lib/gtag";
 import {
   Award,
   BookOpen,
@@ -42,9 +58,10 @@ import {
   Mail,
   Download,
   Users2,
+  X,
 } from "lucide-react";
 import Link from "next/link";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 const LandingPage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -59,6 +76,10 @@ const LandingPage = () => {
     instructors: 0,
   });
 
+
+  // FOMO Dialog state
+  const [showFOMODialog, setShowFOMODialog] = useState(false);
+
   // Countdown timer state
   const [timeLeft, setTimeLeft] = useState({
     days: 2,
@@ -66,6 +87,19 @@ const LandingPage = () => {
     minutes: 45,
     seconds: 30,
   });
+
+  // Show FOMO dialog on first render
+  useEffect(() => {
+    const hasSeenDialog = localStorage.getItem('hasSeenFOMODialog');
+    if ( !isAuthenticated) {
+      const timer = setTimeout(() => {
+        setShowFOMODialog(true);
+        localStorage.setItem('hasSeenFOMODialog', 'true');
+      }, 3000); // Show after 3 seconds
+
+      return () => clearTimeout(timer);
+    }
+  }, [isAuthenticated]);
 
   // Countdown effect
   React.useEffect(() => {
@@ -96,6 +130,11 @@ const LandingPage = () => {
   const handleLeadSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
+    gtagEvent({
+      action: "form_lead_submit",
+      category: "conversion",
+      label: "lead_form",
+    })
 
     try {
       const response = await fetch("/api/leads", {
@@ -336,6 +375,40 @@ const LandingPage = () => {
     },
   ];
 
+  // Carousel slides data
+  const heroSlides = [
+    {
+      id: 1,
+      title: "Master AI Skills in 30 Minutes a Day",
+      subtitle: "New Learning Method",
+      description: "Stop wasting time on scattered tutorials. Our sequential learning platform ensures you master every concept before moving forward.",
+      videoSrc: "https://res.cloudinary.com/dlavqnrlx/video/upload/v1724035988/work_iu9npi.mp4",
+      badge: "AI & Machine Learning",
+      cta: "Start Free – No Credit Card Required",
+      color: "from-blue-600 via-purple-600 to-pink-600"
+    },
+    {
+      id: 2,
+      title: "Full-Stack Development Mastery",
+      subtitle: "Most Popular Course",
+      description: "Build modern web apps with React, Node.js, and cloud deployment. Join 2,156+ developers who've already mastered full-stack development.",
+      videoSrc: "https://res.cloudinary.com/dlavqnrlx/video/upload/v1724035988/work_iu9npi.mp4",
+      badge: "Web Development",
+      cta: "Enroll Now - Save 40%",
+      color: "from-green-600 via-blue-600 to-purple-600"
+    },
+    {
+      id: 3,
+      title: "Data Science & Analytics Excellence",
+      subtitle: "Premium Course",
+      description: "Transform data into insights with Python, SQL, and visualization tools. Perfect for career switchers and data enthusiasts.",
+      videoSrc: "https://res.cloudinary.com/dlavqnrlx/video/upload/v1724035988/work_iu9npi.mp4",
+      badge: "Data Science",
+      cta: "Get Premium Access",
+      color: "from-purple-600 via-pink-600 to-red-600"
+    }
+  ];
+
   return (
     <div className="min-h-screen">
       <section className="relative overflow-hidden bg-gradient-to-br from-slate-50 via-white to-blue-50 py-20 lg:py-32">
@@ -343,138 +416,268 @@ const LandingPage = () => {
           <div></div>
         </GridBeams>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <div className="relative order-2 lg:order-1">
-              <div className="relative mx-auto w-2xl ">
-                <Safari
-                  url="https://www.skillsprint.com"
-                  videoSrc="https://res.cloudinary.com/dlavqnrlx/video/upload/v1724035988/work_iu9npi.mp4"
-                  className="w-full h-auto drop-shadow-2xl"
-                />
-              </div>
-            </div>
-            <div className="order-1  flex lg:order-2 relative justify-end">
-              <div className="relative max-w-lg mx-auto bg-gray-50 lg:mx-0 p-8  backdrop-blur-sm rounded-3xl  overflow-hidden shadow-2xl border border-white/20">
-                <BorderBeam />
-                <ProgressiveBlur position="bottom" className="rounded-3xl" />
-                <div className="relative z-10">
-                  <Badge
-                    variant="secondary"
-                    className="mb-4 bg-blue-100 text-blue-700 border-blue-200"
-                  >
-                    <Zap className="w-3 h-3 mr-1" />
-                    New Learning Method
-                  </Badge>
-                  <h1 className="text-4xl lg:text-5xl font-bold text-slate-900 mb-4 overflow-hidden leading-tight">
-                    Master AI Skills in{" "}
-                    <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
-                      30 Minutes a Day
-                    </span>
-                  </h1>
-                  <p className="text-lg text-slate-600 mb-8 leading-relaxed">
-                    {isAuthenticated ? (
-                      <>
-                        Ready to continue your learning journey? Pick up where
-                        you left off or explore new courses to expand your
-                        skills.
-                        <span className="font-semibold text-slate-800">
-                          {" "}
-                          You&apos;re part of 12,000+ professionals who&apos;ve
-                          accelerated their careers.
-                        </span>
-                      </>
-                    ) : (
-                      <>
-                        Stop wasting time on scattered tutorials. Our sequential
-                        learning platform ensures you master every concept
-                        before moving forward.
-                        <span className="font-semibold text-slate-800">
-                          {" "}
-                          Join 12,000+ professionals who&apos;ve accelerated
-                          their careers.
-                        </span>
-                      </>
-                    )}
-                  </p>
-
-                  {/* Lead Capture Form or Welcome Back */}
-                  {isAuthenticated ? (
-                    <div className="space-y-4">
-                      <div className="text-center py-4">
-                        <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
-                        <h3 className="text-2xl font-bold text-slate-800 mb-2">
-                          Welcome back!
-                        </h3>
-                        <p className="text-slate-600 mb-6">
-                          Ready to continue your learning journey?
-                        </p>
-                        <div className="flex space-x-4">
-                          <Link href="/courses">
-                            <ShimmerButton className="flex-1 py-4 text-lg font-semibold">
-                              Browse Courses
-                            </ShimmerButton>
-                          </Link>
-                          <Link href="/admin">
-                            {isAdmin && (
-                              <InteractiveHoverButton className="py-4 text-lg font-semibold">
-                                Admin Panel
-                              </InteractiveHoverButton>
+          <Carousel
+            opts={{
+              align: "start",
+              loop: true,
+              skipSnaps: false,
+            }}
+            className="w-full"
+          >
+            <CarouselContent>
+              {heroSlides.map((slide) => (
+                <CarouselItem key={slide.id} className="lg:basis-1/1">
+                  <div className="grid lg:grid-cols-2 gap-12 items-center">
+                    <div className="relative order-2 lg:order-1">
+                      <div className="relative mx-auto w-2xl">
+                        <Safari
+                          url="https://www.skillsprint.com"
+                          videoSrc={slide.videoSrc}
+                          className="w-full h-auto drop-shadow-2xl"
+                        />
+                      </div>
+                    </div>
+                    <div className="order-1 flex lg:order-2 relative justify-end">
+                      <div className="relative max-w-lg mx-auto bg-gray-50 lg:mx-0 p-8 backdrop-blur-sm rounded-3xl overflow-hidden shadow-2xl border border-white/20">
+                        <BorderBeam />
+                        <ProgressiveBlur position="bottom" className="rounded-3xl" />
+                        <div className="relative z-10">
+                          <Badge
+                            variant="secondary"
+                            className="mb-4 bg-blue-100 text-blue-700 border-blue-200"
+                          >
+                            <Zap className="w-3 h-3 mr-1" />
+                            {slide.subtitle}
+                          </Badge>
+                          <h1 className="text-4xl lg:text-5xl font-bold text-slate-900 mb-4 overflow-hidden leading-tight">
+                            {slide.title.split(' ').map((word, index) => 
+                              word.includes('30') || word.includes('Full-Stack') || word.includes('Data') ? (
+                                <span key={index} className={`bg-gradient-to-r ${slide.color} bg-clip-text text-transparent`}>
+                                  {word}{' '}
+                                </span>
+                              ) : (
+                                <span key={index}>{word} </span>
+                              )
                             )}
-                          </Link>
+                          </h1>
+                          <p className="text-lg text-slate-600 mb-8 leading-relaxed">
+                            {isAuthenticated ? (
+                              <>
+                                Ready to continue your learning journey? Pick up where
+                                you left off or explore new courses to expand your
+                                skills.
+                                <span className="font-semibold text-slate-800">
+                                  {" "}
+                                  You&apos;re part of 12,000+ professionals who&apos;ve
+                                  accelerated their careers.
+                                </span>
+                              </>
+                            ) : (
+                              <>
+                                {slide.description}
+                                <span className="font-semibold text-slate-800">
+                                  {" "}
+                                  Join 12,000+ professionals who&apos;ve accelerated
+                                  their careers.
+                                </span>
+                              </>
+                            )}
+                          </p>
+
+                          {/* Lead Capture Form or Welcome Back */}
+                          {isAuthenticated ? (
+                            <div className="space-y-4">
+                              <div className="text-center py-4">
+                                <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
+                                <h3 className="text-2xl font-bold text-slate-800 mb-2">
+                                  Welcome back!
+                                </h3>
+                                <p className="text-slate-600 mb-6">
+                                  Ready to continue your learning journey?
+                                </p>
+                                <div className="flex space-x-4">
+                                  <Link href="/courses">
+                                    <ShimmerButton className="flex-1 py-4 text-lg font-semibold">
+                                      Browse Courses
+                                    </ShimmerButton>
+                                  </Link>
+                                  <Link href="/admin">
+                                    {isAdmin && (
+                                      <InteractiveHoverButton className="py-4 text-lg font-semibold">
+                                        Admin Panel
+                                      </InteractiveHoverButton>
+                                    )}
+                                  </Link>
+                                </div>
+                              </div>
+                            </div>
+                          ) : (
+                            <>
+                              {!isSubmitted ? (
+                                <form onSubmit={handleLeadSubmit} className="space-y-4">
+                                  <div className="relative">
+                                    <input
+                                      type="email"
+                                      value={email}
+                                      onChange={(e) => setEmail(e.target.value)}
+                                      placeholder="Enter your work email"
+                                      className="w-full px-6 py-4 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg"
+                                      required
+                                    />
+                                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                                      <CheckCircle className="w-5 h-5 text-green-500" />
+                                    </div>
+                                  </div>
+                                  <ShimmerButton
+                                  onClick={() => {
+                                    event({
+                                      action: "click_buy_button",
+                                      category: "engagement",
+                                      label: "Buy Button Homepage",
+                                    })
+                                  }}
+                                    type="submit"
+                                    disabled={isSubmitting}
+                                    className="w-full py-4 text-lg font-semibold"
+                                  >
+                                    {isSubmitting
+                                      ? "Starting..."
+                                      : slide.cta}
+                                  </ShimmerButton>
+                                  <p className="text-sm text-slate-500 text-center">
+                                    ✨ Get instant access to 3 free lessons + AI cheat
+                                    sheet
+                                  </p>
+                                </form>
+                              ) : (
+                                <div className="text-center py-4">
+                                  <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
+                                  <h3 className="text-2xl font-bold text-slate-800 mb-2">
+                                    Welcome aboard!
+                                  </h3>
+                                  <p className="text-slate-600">
+                                    Check your email for exclusive learning resources
+                                    and your AI cheat sheet.
+                                  </p>
+                                </div>
+                              )}
+                            </>
+                          )}
                         </div>
                       </div>
                     </div>
-                  ) : (
-                    <>
-                      {!isSubmitted ? (
-                        <form onSubmit={handleLeadSubmit} className="space-y-4">
-                          <div className="relative">
-                            <input
-                              type="email"
-                              value={email}
-                              onChange={(e) => setEmail(e.target.value)}
-                              placeholder="Enter your work email"
-                              className="w-full px-6 py-4 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg"
-                              required
-                            />
-                            <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                              <CheckCircle className="w-5 h-5 text-green-500" />
-                            </div>
-                          </div>
-                          <ShimmerButton
-                            type="submit"
-                            disabled={isSubmitting}
-                            className="w-full py-4 text-lg font-semibold"
-                          >
-                            {isSubmitting
-                              ? "Starting..."
-                              : "Start Free – No Credit Card Required"}
-                          </ShimmerButton>
-                          <p className="text-sm text-slate-500 text-center">
-                            ✨ Get instant access to 3 free lessons + AI cheat
-                            sheet
-                          </p>
-                        </form>
-                      ) : (
-                        <div className="text-center py-4">
-                          <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
-                          <h3 className="text-2xl font-bold text-slate-800 mb-2">
-                            Welcome aboard!
-                          </h3>
-                          <p className="text-slate-600">
-                            Check your email for exclusive learning resources
-                            and your AI cheat sheet.
-                          </p>
-                        </div>
-                      )}
-                    </>
-                  )}
+                  </div>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            <CarouselPrevious className="hidden lg:flex" />
+            <CarouselNext className="hidden lg:flex" />
+            
+            {/* Mobile Navigation Dots */}
+            <div className="flex justify-center mt-8 lg:hidden">
+              {heroSlides.map((_, index) => (
+                <button
+                  key={index}
+                  className="w-2 h-2 mx-1 rounded-full bg-slate-300 hover:bg-slate-400 transition-colors"
+                  aria-label={`Go to slide ${index + 1}`}
+                />
+              ))}
+            </div>
+          </Carousel>
+        </div>
+      </section>
+
+      {/* FOMO Dialog */}
+      <Dialog open={showFOMODialog} onOpenChange={setShowFOMODialog}>
+        <DialogContent className="sm:max-w-[500px] px-8 bg-gradient-to-br from-red-50 to-orange-50 border-red-200">
+          <DialogHeader className="text-center">
+            <div className="w-16 h-16 bg-orange-500 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Timer className="w-8 h-8 text-white" />
+            </div>
+            <DialogTitle className="text-2xl font-bold text-orange-700">
+              ⚡ Flash Sale Alert!
+            </DialogTitle>
+            <DialogDescription className="text-lg text-orange-600 mt-2">
+              Don't miss out! Only <span className="font-bold">46 slots</span> remaining for our exclusive 40% discount.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-6">
+            {/* Countdown Timer */}
+            <div className="bg-white rounded-xl p-4 border border-orange-200">
+              <p className="text-sm text-orange-600 mb-3 text-center font-semibold">Offer expires in:</p>
+              <div className="flex justify-center space-x-3">
+                <div className="bg-orange-500 text-white rounded-lg p-3 min-w-[60px] text-center">
+                  <div className="text-xl font-bold">{timeLeft.days}</div>
+                  <div className="text-xs">Days</div>
+                </div>
+                <div className="bg-orange-500 text-white rounded-lg p-3 min-w-[60px] text-center">
+                  <div className="text-xl font-bold">{timeLeft.hours.toString().padStart(2, "0")}</div>
+                  <div className="text-xs">Hours</div>
+                </div>
+                <div className="bg-orange-500 text-white rounded-lg p-3 min-w-[60px] text-center">
+                  <div className="text-xl font-bold">{timeLeft.minutes.toString().padStart(2, "0")}</div>
+                  <div className="text-xs">Minutes</div>
+                </div>
+                <div className="bg-orange-500 text-white rounded-lg p-3 min-w-[60px] text-center">
+                  <div className="text-xl font-bold">{timeLeft.seconds.toString().padStart(2, "0")}</div>
+                  <div className="text-xs">Seconds</div>
                 </div>
               </div>
             </div>
+
+            {/* Best Deal Course */}
+            <div className="bg-white rounded-xl p-4 border border-red-200">
+              <div className="flex items-center gap-3 mb-3">
+                <Badge className="bg-red-500 text-white">BEST DEAL</Badge>
+                <span className="text-sm text-red-600 font-semibold">AI & Machine Learning Mastery</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="text-2xl font-bold text-red-600">$179</span>
+                  <span className="text-lg text-slate-400 line-through">$299</span>
+                  <Badge className="bg-green-100 text-green-700">Save $120</Badge>
+                </div>
+                <div className="text-right">
+                  <div className="text-sm text-red-600 font-semibold">Only 23 slots left!</div>
+                  <div className="w-20 bg-slate-200 rounded-full h-2 mt-1">
+                    <div className="bg-red-500 h-2 rounded-full" style={{ width: "23%" }}></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* CTA Buttons */}
+            <div className="space-y-3">
+              <ShimmerButton 
+                onClick={() => {
+                  setShowFOMODialog(false)
+                  gtagEvent({
+                    action: "click_claim_discount",
+                    category: "engagement",
+                    label: "claim_discount_button",
+                  })
+                }}
+                className="w-full bg-red-600 text-white hover:bg-red-700 py-4 text-lg font-semibold"
+              >
+                🚀 Claim My Discount Now
+              </ShimmerButton>
+              <button 
+                onClick={() => setShowFOMODialog(false)}
+                className="w-full text-red-600 hover:text-red-700 text-sm font-medium"
+              >
+                Maybe later
+              </button>
+            </div>
+
+            {/* Social Proof */}
+            <div className="text-center text-sm text-red-600">
+              <p>🔥 2,847 students already enrolled</p>
+              <p>⭐ 4.9/5 rating from 1,200+ reviews</p>
+            </div>
           </div>
-        </div>
-      </section>
+        </DialogContent>
+      </Dialog>
 
       {/* 1. Clear Value Proposition / Why Us */}
       <section className="py-20 bg-white">

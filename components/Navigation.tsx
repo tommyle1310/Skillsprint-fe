@@ -2,13 +2,25 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BookOpen, Home, User, BarChart3, Menu, X, Users, MessageSquare, LogOut } from "lucide-react";
+import {
+  BookOpen,
+  Home,
+  User,
+  BarChart3,
+  Menu,
+  X,
+  Users,
+  MessageSquare,
+  LogOut,
+  DollarSign,
+} from "lucide-react";
 import { useState } from "react";
 import { ShimmerButton } from "./magicui/shimmer-button";
 import { InteractiveHoverButton } from "./magicui/interactive-hover-button";
 import { useAuthStore } from "@/lib/authStore";
 import { signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { gtagEvent } from "@/lib/ga";
 
 export default function Navigation() {
   const router = useRouter();
@@ -19,6 +31,7 @@ export default function Navigation() {
   const navItems = [
     { href: "/", label: "Home", icon: Home },
     { href: "/courses", label: "Courses", icon: BookOpen },
+    { href: "/pricing", label: "Pricing", icon: DollarSign },
     { href: "/about", label: "About", icon: Users },
     { href: "/contact", label: "Contact", icon: MessageSquare },
   ];
@@ -57,23 +70,48 @@ export default function Navigation() {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
-            {navItems.filter(item => isAdmin ? item.href !== '/contact': item).map((item) => {
-              const Icon = item.icon;
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                    isActive(item.href)
-                      ? "text-blue-600 bg-blue-50"
-                      : "text-slate-600 hover:text-blue-600 hover:bg-slate-50"
-                  }`}
-                >
-                  <Icon className="w-4 h-4" />
-                  <span>{item.label}</span>
-                </Link>
-              );
-            })}
+            {navItems
+              .filter((item) => (isAdmin ? item.href !== "/contact" : item))
+              .map((item) => {
+                const Icon = item.icon;
+                return (
+                  <Link
+                    key={item.href}
+                    onClick={() => {
+                      if (item.href === "/pricing") {
+                        gtagEvent({
+                          action: "click_pricing",
+                          category: "engagement",
+                          label: "pricing_button",
+                        });
+                      }
+                      if (item.href === "/courses") {
+                        gtagEvent({
+                          action: "click_courses",
+                          category: "engagement",
+                          label: "courses_button",
+                        });
+                      }
+                      if (item.href === "/contact") {
+                        gtagEvent({
+                          action: "click_contact",
+                          category: "engagement",
+                          label: "contact_button",
+                        });
+                      }
+                    }}
+                    href={item.href}
+                    className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                      isActive(item.href)
+                        ? "text-blue-600 bg-blue-50"
+                        : "text-slate-600 hover:text-blue-600 hover:bg-slate-50"
+                    }`}
+                  >
+                    <Icon className="w-4 h-4" />
+                    <span>{item.label}</span>
+                  </Link>
+                );
+              })}
           </div>
 
           {/* Auth Buttons */}
@@ -96,10 +134,36 @@ export default function Navigation() {
             ) : (
               <>
                 <Link href="/auth/login">
-                  <InteractiveHoverButton>Login</InteractiveHoverButton>
+                  <InteractiveHoverButton
+                    onClick={() =>
+                      gtagEvent({
+                        action: "click_login",
+                        category: "engagement",
+                        label: "login_button",
+                      })
+                    }
+                  >
+                    Login
+                  </InteractiveHoverButton>
                 </Link>
                 <Link href="/auth/register">
-                  <ShimmerButton>Get Started</ShimmerButton>
+                  <ShimmerButton
+                    onClick={() =>
+                      gtagEvent({
+                        action: "click_register",
+                        category: "engagement",
+                        label: "signup_button",
+                      })
+                    }
+                    onMouseEnter={() =>
+                      gtagEvent({
+                        action: "hover_register",
+                        category: "engagement",
+                      })
+                    }
+                  >
+                    Get Started
+                  </ShimmerButton>
                 </Link>
               </>
             )}
@@ -111,7 +175,11 @@ export default function Navigation() {
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               className="p-2 rounded-md text-slate-600 hover:text-blue-600 hover:bg-slate-50"
             >
-              {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              {isMenuOpen ? (
+                <X className="w-6 h-6" />
+              ) : (
+                <Menu className="w-6 h-6" />
+              )}
             </button>
           </div>
         </div>
@@ -154,10 +222,22 @@ export default function Navigation() {
                   </div>
                 ) : (
                   <>
-                    <Link href="/auth/login" className="block w-full text-center px-3 py-2 text-sm font-medium text-slate-600 hover:text-blue-600">
+                    <Link
+                      href="/auth/login"
+                      className="block w-full text-center px-3 py-2 text-sm font-medium text-slate-600 hover:text-blue-600"
+                    >
                       Login
                     </Link>
-                    <Link href="/auth/register" className="block w-full text-center px-3 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700">
+                    <Link
+                      href="/auth/register"
+                      onMouseEnter={() =>
+                        gtagEvent({
+                          action: "hover_register",
+                          category: "engagement",
+                        })
+                      }
+                      className="block w-full text-center px-3 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
+                    >
                       Get Started
                     </Link>
                   </>

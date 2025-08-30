@@ -7,6 +7,7 @@ import { ApolloProvider } from "@/providers/ApolloProvider";
 import { AuthProvider } from "@/providers/AuthProvider";
 import { AuthCheck } from "@/components/AuthCheck";
 import Script from "next/script";
+import { AnalyticsListener } from "@/providers/AnalyticProvider";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -22,29 +23,30 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-        <head>
+      <head>
         {/* Google Analytics */}
         <Script
-          src={`https://www.googletagmanager.com/gtag/js?id=G-S6HK86G87Q`}
+          src={`https://www.googletagmanager.com/gtag/js?id=${process.env.NEXT_PUBLIC_GA_ID}`}
           strategy="afterInteractive"
         />
-        <Script id="google-analytics" strategy="afterInteractive">
+        <Script id="ga-setup" strategy="afterInteractive">
           {`
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
-            gtag('config', 'G-S6HK86G87Q');
-          `}
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){window.dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', '${process.env.NEXT_PUBLIC_GA_ID}', {
+      page_path: window.location.pathname,
+    });
+  `}
         </Script>
       </head>
       <body className={inter.className}>
         <ApolloProvider>
           <AuthProvider>
             <Navigation />
+            <AnalyticsListener /> 
             <main className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
-              <AuthCheck>
-                {children}
-              </AuthCheck>
+              <AuthCheck>{children}</AuthCheck>
             </main>
             <Toaster position="top-right" />
           </AuthProvider>

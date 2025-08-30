@@ -1,64 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Link from "next/link";
-import {
-  BookOpen,
-  Play,
-  Star,
-  Users,
-  TrendingUp,
-  CheckCircle,
-  Clock,
-  Award,
-  Zap,
-  ChevronRight,
-  Plus,
-  Minus,
-  ChevronRightIcon,
-  CheckIcon,
-} from "lucide-react";
-import { AuroraText } from "@/components/magicui/aurora-text";
-import { BorderBeam } from "@/components/magicui/border-beam";
-import { ShimmerButton } from "@/components/magicui/shimmer-button";
-import { InteractiveHoverButton } from "@/components/magicui/interactive-hover-button";
-import { Marquee } from "@/components/magicui/marquee";
-import { OrbitingCircles } from "@/components/magicui/orbiting-circles";
-import { AvatarCircles } from "@/components/magicui/avatar-circles";
-import { TextAnimate } from "@/components/magicui/text-animate";
-import { GridBeams } from "@/components/magicui/grid-beams";
-import { ProgressiveBlur } from "@/components/magicui/progressive-blur";
-import { AnimatedCircularProgressBar } from "@/components/magicui/animated-circular-progress-bar";
-import { AnimatedList } from "@/components/magicui/animated-list";
-import {
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
-} from "@/components/ui/hover-card";
-import { Badge } from "@/components/ui/badge";
-import { Safari } from "@/components/magicui/safari";
-import Iphone15Pro from "@/components/magicui/iphone-15-pro";
-import { ScrollProgress } from "@/components/magicui/scroll-progress";
-import { AnimatedSubscribeButton } from "@/components/magicui/animated-subscribe-button";
 import { useAuthStore } from "@/lib/authStore";
-import { LoadingSpinner } from "@/components/LoadingSpinner";
-import { Button } from "@/components/ui/button";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { ChevronDown } from "lucide-react";
 import AdminHomepage from "@/components/screens/Home/AdminHomepage";
 import TeacherHomepage from "@/components/screens/Home/TeacherHomepage";
 import UserHomepage from "@/components/screens/Home/UserHomepage";
