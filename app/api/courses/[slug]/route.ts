@@ -2,12 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(
   request: NextRequest,
-  ctx: { params: { slug: string } } | { params: Promise<{ slug: string }> }
+  { params }: { params: Promise<{ slug: string }> }
 ) {
   try {
-    // Next.js 15 route handlers may provide async params
-    const rawParams = (ctx as { params: { slug: string } | Promise<{ slug: string }> }).params;
-    const { slug } = rawParams instanceof Promise ? await rawParams : rawParams;
+    // Next.js 15 route handlers provide async params
+    const { slug } = await params;
 
     if (!slug) {
       return NextResponse.json(
