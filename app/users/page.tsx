@@ -50,7 +50,7 @@ export type ManagedUser = {
 
 const ALL_ROLES: ManagedUser["role"][] = ["USER", "LEAD", "TEACHER", "ADMIN"];
 
-export const columns: ColumnDef<ManagedUser>[] = [
+const columns: ColumnDef<ManagedUser>[] = [
   {
     id: "select",
     header: ({ table }) => (
