@@ -263,7 +263,7 @@ const defaultItemAnimationVariants: Record<
         transition: {
           duration: 0.3,
           scale: {
-            type: "spring",
+            type: "spring" as const,
             damping: 15,
             stiffness: 300,
           },
@@ -286,7 +286,7 @@ const defaultItemAnimationVariants: Record<
         transition: {
           duration: 0.3,
           scale: {
-            type: "spring",
+            type: "spring" as const,
             damping: 15,
             stiffness: 300,
           },
