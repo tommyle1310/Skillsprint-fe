@@ -8,6 +8,7 @@ import { AuthProvider } from "@/providers/AuthProvider";
 import { AuthCheck } from "@/components/AuthCheck";
 import Script from "next/script";
 import { AnalyticsListener } from "@/providers/AnalyticProvider";
+import { Suspense } from "react";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -44,7 +45,9 @@ export default function RootLayout({
         <ApolloProvider>
           <AuthProvider>
             <Navigation />
-            <AnalyticsListener /> 
+            <Suspense fallback={null}>
+              <AnalyticsListener /> 
+            </Suspense>
             <main className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
               <AuthCheck>{children}</AuthCheck>
             </main>
